@@ -16,7 +16,7 @@
     "ethers": "^6.11.1",
     "hardhat-deploy": "^0.11.45",
     "@openzeppelin/contracts-upgradeable": "^5.0.1",
-    "@openzeppelin/hardhat-upgrades": "^3.0.3"
+    "@openzeppelin/hardhat-upgrades": "^3.0.4"
   },
   
   "engines": {
