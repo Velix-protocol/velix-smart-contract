@@ -11,7 +11,7 @@ contract VeMetis is IVeMetis, ERC20Upgradeable, Base {
 
     function initialize(address _config) public initializer {
         __Base_init(_config);
-        __ERC20_init("veMETIS", "veMETIS");
+        __ERC20_init("Velix Metis", "veMETIS");
     }
 
     function setMinter() public onlyRole(DEFAULT_ADMIN_ROLE) {

@@ -13,7 +13,7 @@ contract SveMetis is ERC4626Upgradeable, Base {
     using SafeERC20 for IERC20;
     function initialize( address _config) public initializer {
         __Base_init(_config);
-        __ERC20_init("sveMetis", "sveMetis");
+        __ERC20_init("Staked veMETIS", "sveMETIS");
         __ERC4626_init(IERC20(config.veMetis()));
     }
 
