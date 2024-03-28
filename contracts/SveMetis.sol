@@ -13,11 +13,11 @@ contract SveMetis is ERC4626Upgradeable, Base {
     using SafeERC20 for IERC20;
     function initialize( address _config) public initializer {
         __Base_init(_config);
-        __ERC20_init("Staked veMETIS", "sveMETIS");
+        __ERC20_init(" Staked veMETIS", "sveMETIS");
         __ERC4626_init(IERC20(config.veMetis()));
     }
 
-    function mintAndDeposit(uint256 assets, address receiver) external onlyRole(BETA_USER_ROLE) returns (uint256) {
+    function mintAndDeposit(uint256 assets, address receiver) external returns (uint256) {
         require(assets <= maxDeposit(receiver), "ERC4626: deposit more than max");
         uint256 shares = previewDeposit(assets);
 
@@ -39,7 +39,7 @@ contract SveMetis is ERC4626Upgradeable, Base {
         address owner,
         uint256 withdrawAmount,
         uint256 shares
-    ) internal override onlyRole(BETA_USER_ROLE) {
+    ) internal override{
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
         }
@@ -57,7 +57,7 @@ contract SveMetis is ERC4626Upgradeable, Base {
         address owner,
         uint256 assets,
         uint256 shares
-    ) internal override onlyRole(BETA_USER_ROLE) {
+    ) internal override{
         super._deposit(caller, owner, assets, shares);
     }
 }
