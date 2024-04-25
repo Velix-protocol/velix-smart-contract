@@ -10,6 +10,8 @@ contract NFTMinter is Initializable, ERC721Upgradeable, ERC721URIStorageUpgradea
     address public admin;
     uint256 private _tokenIds;
 
+    constructor() ERC721("VSNFT", "Velix Superstar NFT") { }
+
     struct mintedNft {
         uint256 nftId;
         uint256 token_id;
