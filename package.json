@@ -16,7 +16,7 @@
     "dotenv": "^16.4.5",
     "ethers": "^6.11.1",
     "hardhat": "^2.20.1",
-    "hardhat-deploy": "^0.11.45"
+    "hardhat-deploy": "^0.12.4"
   },
   "engines": {
     "node": ">=18.0.0"
