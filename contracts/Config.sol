@@ -14,7 +14,7 @@ contract Config is IConfig, Base {
     event RoleGranted(
         bytes32 indexed role,
         address indexed account,
-        address indexed sender
+        address indexed senderFini
     );
     event RoleRevoked(
         bytes32 indexed role,
