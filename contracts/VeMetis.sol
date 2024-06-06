@@ -14,7 +14,7 @@ contract VeMetis is IVeMetis, ERC20Upgradeable, Base {
         __ERC20_init("Velix Metis", "veMETIS");
     }
 
-    function setMinter() public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setMinter() public onlyOperatorOrAdmin {
         minter = config.veMetisMinter();
     }
 

@@ -8,6 +8,7 @@ import "./interface/IVeMetisMinter.sol";
 import "./interface/IConfig.sol";
 import "./interface/ICrossDomainMessenger.sol";
 import "./Base.sol";
+import "./interface/ISveMetis.sol";
 
 contract RewardDispatcher is Initializable, Base {
     using SafeERC20 for IERC20;
@@ -27,34 +28,26 @@ contract RewardDispatcher is Initializable, Base {
 
     function initialize(address _config) public initializer {
         __Base_init(_config);
-        metis = config.metis();
-        veMetisMinter = config.veMetisMinter();
         veMetis = config.veMetis();
         sveMetis = config.sveMetis();
-
-        IERC20(metis).approve(veMetisMinter, type(uint256).max);
     }
 
     /**
-     * Convert holding Metis to veMETIS, and then dispatch to protocol treasury and sveMetis vault
+     * @notice Dispatch rewards
+     * @dev dispatch holding veMetis to protocol treasury and sveMetis vault
      */
-    function dispatch(uint metisAmount) external {
-        if (metisAmount > 0) {
-            IERC20(metis).transferFrom(msg.sender, address(this), metisAmount);
-            IVeMetisMinter(veMetisMinter).mint(address(this), metisAmount);
-        }
+    function dispatch() external onlyBackend {
 
         uint amount = IERC20(veMetis).balanceOf(address(this));
-        uint256 protocolTreasuryAmount = (amount *
-            config.protocolTreasuryRatio()) / 10000;
-        uint256 sveMetisAmount = amount - protocolTreasuryAmount;
+        require(amount > 0, "RewardDispatcher: no reward");
 
-        IERC20(veMetis).safeTransfer(
-            config.protocolTreasury(),
-            protocolTreasuryAmount
-        );
-        IERC20(veMetis).safeTransfer(sveMetis, sveMetisAmount);
+        uint256 toTreasuryAmount = amount * config.protocolTreasuryRatio() / 10000;
+        uint256 toVaultAmount = amount - toTreasuryAmount;
 
-        emit Dispatched(amount, protocolTreasuryAmount, sveMetisAmount);
+        IERC20(veMetis).safeTransfer(config.protocolTreasury(), toTreasuryAmount);
+        IERC20(veMetis).approve(address(sveMetis), toVaultAmount);
+        ISveMetis(sveMetis).addAssets(toVaultAmount);
+
+        emit Dispatched(amount, toTreasuryAmount, toVaultAmount);
     }
 }
