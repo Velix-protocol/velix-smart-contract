@@ -28,6 +28,8 @@ const func: DeployFunction = async function ({
 func.tags = ["Config"];
 
 export default func;
-// reusing "DefaultProxyAdmin": 0x349f3de199C7FD5e4a1d756D2857B9Ca5f5F6576
-// deploying "Config_Implementation": 0xcbd9689f170588f8079134F44d2A5fD5C57d1cAE 
-// deploying "Config_Proxy": 0x70A4e12BbBD6AD0c1240203acCA6DD78941A3ee7 
+// ========Deploying and Verifying Config========
+// deploying "DefaultProxyAdmin" deployed at 0x1771B0E0df123ABe65689bCEF15Fd6D03aCdE2a6
+// deploying "Config_Implementation" deployed at 0x1AA8D04a6Ef1208852f75bEa94aE852Bd9106185
+// deploying "Config_Proxy"  deployed at 0x241648DD30c31eb6bADDc427c2ac05E4Cf3c8908
+// ========Deploying Config========

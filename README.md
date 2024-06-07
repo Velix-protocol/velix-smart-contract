@@ -1,30 +1,26 @@
-# All contract addresses
+# Velix  Protocol
 
-- Config: 0xF578812d6D648fc007365f780894A9c13DDd5f93
-- Dealer: 0xc9D0D4a8F290FccAAaF6390455ab10A3a64128Ad
-- Metis:  0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000
-- ProtocolTreasure: 0xc3BD53e8BB7F5a8f98C565aad28C9b618c84D8Fa
-- RewardDispatcher: 0x9d78f67d0eC5914E499097b78d341E7476CD67B0
-- sveMETIS:  0x0EF0A57b3D565bbE214ae41994Bc5aD9EBAD7243 => 0x33B7cdB39fE9bFe4fA71A3C1983bDF59B1138a09
-- veMETIS: 0x4aff6784f9a8c63CD18aEe48550150835f2345E0
-- veMentisMinter: 0x2CCF63141DF788e7faa46a4cE215CB92A88b1420 => 0x12e9EEA4F9401bA1b6dE28b779cbE79042E8B847
+This is an LSD protocol built on Metis network, it implements a dual token mechanism
+and uses the ERC-4626 standard for it's vault contract called sveMetis.
 
-## Test
+Check out the documentation linked bellow for more information
+[Velix Docs](https://ceg.vote/t/lst-protocol-proposal-velix/3403)
 
-```
-npm test
-```
+# All contract  
 
-## Compile
-
-```
-npm run compile
-```
+- Config: Manages configuration settings and roles for the protocol.
+- L1Dealer: Calls LockingPool through SequencerAgent
+- Metis:  The smart contract address for the Metis token sepolia testnet.
+- ProtocolTreasure: The protocol's mutlisig wallet address
+- RewardDispatcher: Initializes the contract by setting the configuration addresses.
+- sveMETIS:  The SveMetis contract is an implementation of the ERC4626 vault.
+- veMETIS: ERC-20 token represnting the Metis token staked in the protocol.
+- veMentisMinter: Initializes the contract with configuration addresses and sets initial deposit.
 
 ## Deploy
 
 ```
-npx hardhat --network metis-sepolia deploy
+npx hardhat --network metis-sepolia deploy --tags
 ```
 
 ## Verify

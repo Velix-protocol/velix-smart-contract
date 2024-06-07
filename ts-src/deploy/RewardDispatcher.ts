@@ -29,7 +29,3 @@ const func: DeployFunction = async function ({
 func.tags = ["RewardDispatcher"];
 
 export default func;
-
-// reusing "DefaultProxyAdmin" at 0x349f3de199C7FD5e4a1d756D2857B9Ca5f5F6576
-// reusing "RewardDispatcher_Implementation" at 0xED453D3215FC8f1Da37cC2D115b265e4d2d435A1
-// deploying "RewardDispatcher_Proxy" : 0x873f69c397546a89024B770379958D3aDE671729
