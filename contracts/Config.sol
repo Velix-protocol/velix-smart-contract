@@ -62,57 +62,49 @@ contract Config is IConfig, Base {
         address _bridge,
         address _protocolTreasury,
         uint32 _protocolTreasuryRatio
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) public onlyOperatorOrAdmin {
         // set initialvaules
         configMap[ADDRESS_METIS] = uint256(uint160(_metis));
         configMap[ADDRESS_BRIDGE] = uint256(uint160(_bridge));
         configMap[ADDRESS_PROTOCOL_TREASURY] = uint256(
             uint160(_protocolTreasury)
         );
-        setProtocolTreasuryRatio(_protocolTreasuryRatio);
 
-        // grant initial roles
-        _grantRole(INTERNAL_ROLE, _metis);
-        _grantRole(INTERNAL_ROLE, _bridge);
-        _grantRole(INTERNAL_ROLE, _protocolTreasury);
+        // Setting protocolTreasury
+        setProtocolTreasuryRatio(_protocolTreasuryRatio);
     }
 
     function setL1Dealer(
         address _l1Dealer
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) public onlyOperatorOrAdmin {
         configMap[ADDRESS_L1_DEALER] = uint256(uint160(_l1Dealer));
-        _grantRole(INTERNAL_ROLE, _l1Dealer);
     }
 
-    function setVeMetis(address _veMetis) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setVeMetis(address _veMetis) public onlyOperatorOrAdmin {
         configMap[ADDRESS_VEMETIS] = uint256(uint160(_veMetis));
-        _grantRole(INTERNAL_ROLE, _veMetis);
     }
 
     function setVeMetisMinterAddress(
         address _veMetisMinter
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) public onlyOperatorOrAdmin {
         configMap[ADDRESS_VEMETIS_MINTER] = uint256(uint160(_veMetisMinter));
-        _grantRole(INTERNAL_ROLE, _veMetisMinter);
     }
 
     function setSveMetis(
         address _sveMetis
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) public onlyOperatorOrAdmin {
         configMap[ADDRESS_SVEMETIS] = uint256(uint160(_sveMetis));
-        _grantRole(INTERNAL_ROLE, _sveMetis);
     }
 
     function setRewardDispatcher(
         address _rewardDispatcher
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) public onlyOperatorOrAdmin {
         configMap[ADDRESS_REWARD_DISPATCHER] = uint256(
             uint160(_rewardDispatcher)
         );
-        _grantRole(INTERNAL_ROLE, _rewardDispatcher);
     }
 
-    // Getters
+    // Getters functions
     function veMetis() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_VEMETIS]));
     }
@@ -149,10 +141,10 @@ contract Config is IConfig, Base {
         return uint32(configMap[UINT32_PROTOCOL_TREASURY_RATIO]);
     }
 
-    // setters  help
+    // Setters  functions
     function setProtocolTreasury(
         address _protocolTreasury
-    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external override onlyOperatorOrAdmin {
         require(
             _protocolTreasury != address(0),
             "Config: protocolTreasury is zero address"
@@ -164,7 +156,7 @@ contract Config is IConfig, Base {
 
     function setProtocolTreasuryRatio(
         uint32 _protocolTreasuryRatio
-    ) public override onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) public override onlyOperatorOrAdmin {
         require(
             _protocolTreasuryRatio <= 10000,
             "Config: protocolTreasuryRatio must be less than 10000"
@@ -204,7 +196,7 @@ contract Config is IConfig, Base {
     function revokeRole(
         bytes32 role,
         address account
-    ) public override onlyRole(getRoleAdmin(role)) {
+    ) public override onlyOperatorOrAdmin() {
         _revokeRole(role, account);
     }
 
@@ -236,14 +228,14 @@ contract Config is IConfig, Base {
     function setRoleAdmin(
         bytes32 role,
         bytes32 adminRole
-    ) public override onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
+    ) public override onlyOperatorOrAdmin {
         _setRoleAdmin(role, adminRole);
     }
 
     function grantRole(
         bytes32 role,
         address account
-    ) public override onlyRole(getRoleAdmin(role)) {
+    ) public override onlyOperatorOrAdmin {
         _grantRole(role, account);
     }
 
@@ -284,12 +276,5 @@ contract Config is IConfig, Base {
             _roles[role].members[account] = false;
             emit RoleRevoked(role, account, _msgSender());
         }
-    }
-
-    function allowAll(
-        bytes32 role,
-        bool allow
-    ) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        _roles[role].allowAll = allow;
     }
 }

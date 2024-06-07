@@ -8,38 +8,63 @@ import "./interface/IVeMetisMinter.sol";
 import "./interface/IVeMetis.sol";
 import "./Base.sol";
 
+/** 
+* @title SveMetis
+* @notice The SveMetis contract is an implementation of the ERC4626 vault.
+* It allows users to deposit veMetis tokens in exchange for sveMetis tokens,
+* and vice versa. Additionally, it distributes locking rewards to sveMetis token holders.
+*/
 contract SveMetis is ERC4626Upgradeable, Base {
 
     using SafeERC20 for IERC20;
+
+    address public rewardDispatcher;
+    address public veMetisMinter;
+    uint256 public _totalAssets;
+    address public deployer;
+
+    event AssetsAdded(address indexed caller, uint256 assets);
     function initialize( address _config) public initializer {
         __Base_init(_config);
         __ERC20_init(" Staked veMETIS", "sveMETIS");
         __ERC4626_init(IERC20(config.veMetis()));
+        deployer = _msgSender();
     }
 
-    function mintAndDeposit(uint256 assets, address receiver) external returns (uint256) {
-        require(assets <= maxDeposit(receiver), "ERC4626: deposit more than max");
-        uint256 shares = previewDeposit(assets);
+    function setInitialValues() public onlyOperatorOrAdmin {
+        rewardDispatcher = config.rewardDispatcher();
+        veMetisMinter = config.veMetisMinter();
+    }
 
-        IVeMetisMinter veMetisMinter = IVeMetisMinter(config.veMetisMinter());
-        IERC20 metis = IERC20(config.metis());
+    function depositFromVeMetisMinter(uint256 assets, address receiver) internalOnly(veMetisMinter) public returns (uint256) {
+        return super.deposit(assets, receiver);
+    }
 
-        metis.safeTransferFrom(_msgSender(), address(this), assets);
-        metis.approve(address(veMetisMinter), assets);
-        veMetisMinter.mint(address(this), assets);
+    function addAssets(uint256 assets) internalOnly(rewardDispatcher) external {
+        IERC20 asset = IERC20(asset());
+        asset.safeTransferFrom(_msgSender(), address(this), assets);
+        _totalAssets += assets;
+        emit AssetsAdded(_msgSender(), assets);
+    }
 
-        _mint(receiver, shares);
-
-        return shares;
+    /// @notice returns the total assets in the vault
+    function totalAssets() public view virtual override returns (uint256) {
+        return _totalAssets;
     }
     
+    /// @notice withdraw veMETIS from sveMETIS vault, user's sveMETIS will be burned
+    /// @param caller caller of the function
+    /// @param receiver receiver of veMETIS
+    /// @param owner owner of sveMETIS
+    /// @param assets veMETIS amount
+    /// @param shares sveMETIS amount
     function _withdraw(
         address caller,
         address receiver,
         address owner,
-        uint256 withdrawAmount,
+        uint256 assets,
         uint256 shares
-    ) internal override{
+    ) internal override {
         if (caller != owner) {
             _spendAllowance(owner, caller, shares);
         }
@@ -47,17 +72,25 @@ contract SveMetis is ERC4626Upgradeable, Base {
         _burn(owner, shares);
 
         IERC20 asset = IERC20(asset());
-        SafeERC20.safeTransfer(asset, receiver, withdrawAmount);
+        SafeERC20.safeTransfer(asset, receiver, assets);
+        _totalAssets -= assets;
 
-        emit Withdraw(caller, receiver, owner, withdrawAmount, shares);
+        emit Withdraw(caller, receiver, owner, assets, shares);
     }
 
+    /// @notice deposit veMETIS to sveMETIS vault, user will get sveMETIS
+    /// @param caller caller of the function
+    /// @param receiver receiver of sveMETIS
+    /// @param assets amount of veMETIS
+    /// @param shares amount of sveMETIS
     function _deposit(
         address caller,
-        address owner,
+        address receiver,
         uint256 assets,
         uint256 shares
-    ) internal override{
-        super._deposit(caller, owner, assets, shares);
+    ) internal override  {
+        super._deposit(caller, receiver, assets, shares);
+        _totalAssets += assets;
+        emit AssetsAdded(caller, assets);
     }
 }

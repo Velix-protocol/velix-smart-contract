@@ -3,34 +3,57 @@ pragma solidity 0.8.20;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import "./interface/IConfig.sol";
 
-abstract contract Base is ContextUpgradeable {
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    bytes32 public constant BETA_USER_ROLE = keccak256("BETA_USER_ROLE");
-    bytes32 public constant INTERNAL_ROLE = keccak256("INTERNAL_ROLE");
+abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
 
-    modifier onlyRole(bytes32 role) {
-        if (!config.hasRole(INTERNAL_ROLE, _msgSender())) {
-            _checkRole(role);
-        }
+    /// @notice The role for the operator
+    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    
+    /// @notice The role for the admin
+    bytes32 public constant DEFAULT_ADMIN_ROLE = keccak256("DEFAULT_ADMIN_ROLE");
+
+    /// @notice The role for the backend
+    bytes32 public constant BACKEND_ROLE = keccak256("BACKEND_ROLE");
+
+    /// @notice sveMetis vault initial deposit amount
+    uint256 public constant INITIAL_DEPOSIT_AMOUNT = 1 ether;
+
+    /// @notice holds the address of the config contract
+    IConfig public config;
+
+    address private internalCalling;
+
+    modifier onlyOperatorOrAdmin() {
+        require(
+            config.hasRole(OPERATOR_ROLE, _msgSender()) ||
+            config.hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "onlyOperatorOrAdmin: caller does not have the operator or admin role"
+        );
         _;
     }
 
-    IConfig public config;
-
-    function __Base_init(address _config) internal onlyInitializing {
-        config = IConfig(_config);
+    modifier onlyBackend() {
+        _checkRole(BACKEND_ROLE);
+        _;
     }
 
-    /**
-     * @dev Revert with a standard message if `_msgSender()` is missing `role`.
-     * Overriding this function changes the behavior of the {onlyRole} modifier.
-     *
-     * Format of the revert message is described in {_checkRole}.
-     *
-     * _Available since v4.6._
-     */
+    modifier internalOnly(address internalAddress) {
+        require(_msgSender() == internalAddress, "internal only");
+        internalCalling = internalAddress;
+        _;
+        internalCalling = address(0);
+    }
+
+    /// @notice Initializes the contract with the config contract address
+    /// @param _config The address of the config contract
+    function __Base_init(address _config) internal onlyInitializing {
+        config = IConfig(_config);
+        __ReentrancyGuard_init();
+    }
+
+  /// @dev Revert with a standard message if `_msgSender()` is missing `role`.
     function _checkRole(bytes32 role) internal view virtual {
         _checkRole(role, _msgSender());
     }
@@ -55,6 +78,13 @@ abstract contract Base is ContextUpgradeable {
                 )
             );
         }
+    }
+
+    /**
+     * reject Metis transfer
+     */
+    receive() external payable {
+        revert("VeMetisMinter: not support Metis transfer");
     }
 
     /**
