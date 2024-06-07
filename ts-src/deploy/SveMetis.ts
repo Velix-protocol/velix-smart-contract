@@ -30,6 +30,3 @@ const func: DeployFunction = async function ({
 func.tags = ["SveMetis"];
 
 export default func;
-// reusing "DefaultProxyAdmin": 0x349f3de199C7FD5e4a1d756D2857B9Ca5f5F6576
-// deploying "SveMetis_Implementation": 0x2Ce1016498535Dd66956Bfe1B107a60e88ED820a 
-// deploying "SveMetis_Proxy": 0x50725560Ad9154C0765B422bA5a8D1E49c9F65aE

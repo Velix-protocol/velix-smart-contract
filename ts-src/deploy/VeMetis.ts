@@ -29,6 +29,3 @@ const func: DeployFunction = async function ({
 func.tags = ["VeMetis"];
 
 export default func;
-// reusing "DefaultProxyAdmin" : 0x349f3de199C7FD5e4a1d756D2857B9Ca5f5F6576
-// deploying "VeMetis_Implementation" : 0xc51D95684cC47C3CF151437654b192556809D993
-// deploying "VeMetis_Proxy" : 0xF5db5bBEE03e99F509B036B1255C5080553E536c
