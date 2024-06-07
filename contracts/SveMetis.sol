@@ -18,8 +18,6 @@ contract SveMetis is ERC4626Upgradeable, Base {
 
     using SafeERC20 for IERC20;
 
-    address public rewardDispatcher;
-    address public veMetisMinter;
     uint256 public _totalAssets;
     address public deployer;
 
@@ -31,16 +29,12 @@ contract SveMetis is ERC4626Upgradeable, Base {
         deployer = _msgSender();
     }
 
-    function setInitialValues() public onlyOperatorOrAdmin {
-        rewardDispatcher = config.rewardDispatcher();
-        veMetisMinter = config.veMetisMinter();
-    }
 
-    function depositFromVeMetisMinter(uint256 assets, address receiver) internalOnly(veMetisMinter) public returns (uint256) {
+    function depositFromVeMetisMinter(uint256 assets, address receiver) internalOnly(config.veMetisMinter()) public returns (uint256) {
         return super.deposit(assets, receiver);
     }
 
-    function addAssets(uint256 assets) internalOnly(rewardDispatcher) external {
+    function addAssets(uint256 assets) internalOnly(config.rewardDispatcher()) external {
         IERC20 asset = IERC20(asset());
         asset.safeTransferFrom(_msgSender(), address(this), assets);
         _totalAssets += assets;
