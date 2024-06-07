@@ -1,4 +1,4 @@
-//SPDX-License-Identifier: MIT
+///SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -10,6 +10,10 @@ import "./interface/ICrossDomainMessenger.sol";
 import "./Base.sol";
 import "./interface/ISveMetis.sol";
 
+/**
+ * @title RewardDispatcher
+ * @dev Manages the distribution of rewards between the protocol treasury and sveMetis vault.
+ */
 contract RewardDispatcher is Initializable, Base {
     using SafeERC20 for IERC20;
 
@@ -26,6 +30,10 @@ contract RewardDispatcher is Initializable, Base {
         uint256 sveMetisAmount
     );
 
+    /**
+     * @dev Initializes the contract by setting the configuration addresses.
+     * @param _config Address of the configuration contract.
+     */
     function initialize(address _config) public initializer {
         __Base_init(_config);
         veMetis = config.veMetis();
@@ -34,11 +42,10 @@ contract RewardDispatcher is Initializable, Base {
 
     /**
      * @notice Dispatch rewards
-     * @dev dispatch holding veMetis to protocol treasury and sveMetis vault
+     * @dev Distributes veMetis tokens to the protocol treasury and sveMetis vault.
      */
-    function dispatch() external onlyBackend {
-
-        uint amount = IERC20(veMetis).balanceOf(address(this));
+    function dispatch() external nonReentrant onlyBackend {
+        uint256 amount = IERC20(veMetis).balanceOf(address(this));
         require(amount > 0, "RewardDispatcher: no reward");
 
         uint256 toTreasuryAmount = amount * config.protocolTreasuryRatio() / 10000;

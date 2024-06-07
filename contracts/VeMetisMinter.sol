@@ -12,10 +12,13 @@ import "./interface/ICrossDomainEnabled.sol";
 import "./interface/ICrossDomainMessenger.sol";
 import "./Base.sol";
 
+/**
+ * @title VeMetisMinter
+ * @dev Manages the minting and distribution of veMETIS tokens within the Velix protocol.
+ */
 contract VeMetisMinter is IVeMetisMinter, Base {
     using SafeERC20 for IERC20;
 
-    address public rewardDispatcher;
     address public veMetis;
     address public sveMetis;
     address public metis;
@@ -25,6 +28,10 @@ contract VeMetisMinter is IVeMetisMinter, Base {
     event DepositToL1Dealer(uint256 amount);
     event Minted(address indexed account, uint256 amount);
 
+    /**
+     * @dev Initializes the contract with configuration addresses and sets initial deposit.
+     * @param _config Address of the configuration contract.
+     */
     function initialize(address _config) public initializer {
         __Base_init(_config);
         veMetis = config.veMetis();
@@ -33,79 +40,52 @@ contract VeMetisMinter is IVeMetisMinter, Base {
         bridge = config.bridge();
         crossDomainMessenger = ICrossDomainEnabled(bridge).messenger();
 
-        /**
-         * @notice ERC-4626 vaults that are empty or nearly empty are susceptible to a frontrunning attack known as a donation or inflation attack.
-         * @dev This attack occurs when an attacker "donates" to the vault, artificially inflating the price of a share and causing slippage that can lead to theft.
-         * @dev To mitigate this issue, an initial significant deposit is made into the vault upon deployment, making price manipulation impractical.
-         * @dev Specifically, an initial deposit is made into the seMetis vault to safeguard against this potential attack.
-         */
-        _mintAndDeposit(_msgSender(),INITIAL_DEPOSIT_AMOUNT);
+        // Initial deposit to prevent inflation attacks
+        _mintAndDeposit(_msgSender(), INITIAL_DEPOSIT_AMOUNT);
     }
 
-    function setRewardDispatcher() public onlyOperatorOrAdmin {
-        rewardDispatcher = config.rewardDispatcher();
-    }
-  
     /**
-     * Mint veMetis to user
-     * @param account mint user
-     * @param amount asset amount
+     * @notice Mint veMetis to user
+     * @param account Address to receive minted veMetis
+     * @param amount Amount of veMetis to mint
      */
-    function mint(address account, uint256 amount) external nonReentrant override {
+    function mint(address account, uint256 amount) public nonReentrant override {
         IERC20(metis).safeTransferFrom(_msgSender(), address(this), amount);
         IVeMetis(veMetis).mint(account, amount);
         emit Minted(_msgSender(), amount);
     }
 
     /**
-     * @notice Mint eMetis from L1 as the reward
-     * @param amount Metis amount
-    */
-    function mintFromL1(uint256 amount) external  nonReentrant override {
-        require(
-            _msgSender() == crossDomainMessenger,
-            "VeMetisMinter: caller is not the crossDomainMessenger"
-        );
-        require(
-            ICrossDomainMessenger(crossDomainMessenger)
-                .xDomainMessageSender() == config.l1Dealer(),
-            "VeMetisMinter: caller is not the l1Dealer"
-        );
-        IVeMetis(veMetis).mint(rewardDispatcher, amount);
+     * @notice Mint veMetis from L1 as the reward
+     * @param amount Amount of veMetis to mint
+     */
+    function mintFromL1(uint256 amount) external nonReentrant override {
+        require(_msgSender() == crossDomainMessenger, "VeMetisMinter: caller is not the crossDomainMessenger");
+        require(ICrossDomainMessenger(crossDomainMessenger).xDomainMessageSender() == config.l1Dealer(), "VeMetisMinter: caller is not the l1Dealer");
+        IVeMetis(veMetis).mint(config.rewardDispatcher(), amount);
     }
 
     /**
      * @notice Transfer Metis to L1 Dealer through the bridge
-     * @param amount Metis amount
+     * @param amount Amount of Metis to transfer
      */
-    function depositToL1Dealer(uint256 amount) external payable  onlyBackend override {
+    function depositToL1Dealer(uint256 amount) external payable onlyBackend override {
         if (IERC20(metis).allowance(address(this), bridge) < amount) {
             IERC20(metis).approve(bridge, type(uint256).max);
         }
 
-        // there are 7 days delay through the bridge
-        IL2ERC20Bridge(bridge).withdrawTo{value: msg.value}(
-            metis,
-            config.l1Dealer(),
-            amount,
-            0,
-            ""
-        );
+        IL2ERC20Bridge(bridge).withdrawTo{value: msg.value}(metis, config.l1Dealer(), amount, 0, "");
         emit DepositToL1Dealer(amount);
     }
 
-
-    /// @notice Mint veMETIS and deposit to sveMETIS vault, user will get sveMETIS 
-    /// @param account account to accept sveMETIS
-    /// @param amount Metis amount
-    function _mintAndDeposit(address account, uint256 amount) internal  {
-        // user should ensure enough metis balance and allowance
+    /**
+     * @notice Mint veMETIS and deposit to sveMETIS vault, user will get sveMETIS 
+     * @param account Address to receive sveMETIS
+     * @param amount Amount of veMETIS to mint and deposit
+     */
+    function _mintAndDeposit(address account, uint256 amount) internal {
         require(amount > 0, "VeMetisMinter: amount is zero");
-        //Transfer  metis  tokens to VeMetisMinter
-        IERC20(metis).safeTransferFrom(_msgSender(), address(this), amount);
-        // Mints veMETIS and deposit to sveMETIS
-        IVeMetis(veMetis).mint(account, amount);
-        // Approve and deposit to veMETIS into sveMetis vault
+        mint(account, amount);
         IERC20(veMetis).approve(sveMetis, amount);
         ISveMetis(sveMetis).depositFromVeMetisMinter(amount, account);
     }

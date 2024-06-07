@@ -5,6 +5,10 @@ import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "./interface/IConfig.sol";
 import "./Base.sol";
 
+/**
+ * @title Config
+ * @dev Manages configuration settings and roles for the protocol.
+*/
 contract Config is IConfig, Base {
     event RoleAdminChanged(
         bytes32 indexed role,
@@ -51,51 +55,77 @@ contract Config is IConfig, Base {
 
     mapping(uint256 => uint256) public configMap;
 
+    /**
+     * @dev Initializes the contract by setting the default admin role to the deployer.
+    */
     function initialize() external initializer {
         __Base_init(address(this));
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    // Setters
+    /**
+     * @dev Sets initial values for the configuration.
+     * @param _metis Address of the Metis token.
+     * @param _bridge Address of the bridge contract.
+     * @param _protocolTreasury Address of the protocol treasury.
+     * @param _protocolTreasuryRatio Ratio for the protocol treasury.
+    */
     function setIntialValues(
         address _metis,
         address _bridge,
         address _protocolTreasury,
         uint32 _protocolTreasuryRatio
     ) public onlyOperatorOrAdmin {
-        // set initialvaules
         configMap[ADDRESS_METIS] = uint256(uint160(_metis));
         configMap[ADDRESS_BRIDGE] = uint256(uint160(_bridge));
         configMap[ADDRESS_PROTOCOL_TREASURY] = uint256(
             uint160(_protocolTreasury)
         );
-
-        // Setting protocolTreasury
         setProtocolTreasuryRatio(_protocolTreasuryRatio);
     }
 
+    /**
+     * @dev Sets the L1 dealer address.
+     * @param _l1Dealer Address of the L1 dealer.
+     */
     function setL1Dealer(
         address _l1Dealer
     ) public onlyOperatorOrAdmin {
         configMap[ADDRESS_L1_DEALER] = uint256(uint160(_l1Dealer));
     }
 
+    /**
+     * @dev Sets the veMetis address.
+     * @param _veMetis Address of the veMetis contract.
+     */
     function setVeMetis(address _veMetis) public onlyOperatorOrAdmin {
         configMap[ADDRESS_VEMETIS] = uint256(uint160(_veMetis));
     }
 
+    /**
+     * @dev Sets the veMetis minter address.
+     * @param _veMetisMinter Address of the veMetis minter contract.
+     */
     function setVeMetisMinterAddress(
         address _veMetisMinter
     ) public onlyOperatorOrAdmin {
         configMap[ADDRESS_VEMETIS_MINTER] = uint256(uint160(_veMetisMinter));
     }
 
+    /**
+     * @dev Sets the sVeMetis address.
+     * @param _sveMetis Address of the sVeMetis contract.
+     */
     function setSveMetis(
         address _sveMetis
     ) public onlyOperatorOrAdmin {
         configMap[ADDRESS_SVEMETIS] = uint256(uint160(_sveMetis));
     }
 
+    /**
+     * @dev Sets the reward dispatcher address.
+     * @param _rewardDispatcher Address of the reward dispatcher contract.
+     */
     function setRewardDispatcher(
         address _rewardDispatcher
     ) public onlyOperatorOrAdmin {
@@ -104,44 +134,74 @@ contract Config is IConfig, Base {
         );
     }
 
-    // Getters functions
+/**
+     * @dev Returns the veMetis address.
+     */
     function veMetis() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_VEMETIS]));
     }
 
+    /**
+     * @dev Returns the veMetis minter address.
+     */
     function veMetisMinter() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_VEMETIS_MINTER]));
     }
 
+    /**
+     * @dev Returns the sVE Metis address.
+     */
     function sveMetis() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_SVEMETIS]));
     }
 
+    /**
+     * @dev Returns the reward dispatcher address.
+     */
     function rewardDispatcher() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_REWARD_DISPATCHER]));
     }
 
+    /**
+     * @dev Returns the Metis address.
+     */
     function metis() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_METIS]));
     }
 
+    /**
+     * @dev Returns the bridge address.
+     */
     function bridge() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_BRIDGE]));
     }
 
+    /**
+     * @dev Returns the L1 dealer address.
+     */
     function l1Dealer() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_L1_DEALER]));
     }
 
+    /**
+     * @dev Returns the protocol treasury address.
+     */
     function protocolTreasury() public view override returns (address) {
         return address(uint160(configMap[ADDRESS_PROTOCOL_TREASURY]));
     }
 
+    /**
+     * @dev Returns the protocol treasury ratio.
+     */
     function protocolTreasuryRatio() public view override returns (uint32) {
         return uint32(configMap[UINT32_PROTOCOL_TREASURY_RATIO]);
     }
 
-    // Setters  functions
+    /**
+     * @dev Sets the protocol treasury address.
+     * @param _protocolTreasury Address of the protocol treasury.
+     */
+
     function setProtocolTreasury(
         address _protocolTreasury
     ) external override onlyOperatorOrAdmin {
@@ -154,6 +214,10 @@ contract Config is IConfig, Base {
         );
     }
 
+    /**
+     * @dev Sets the protocol treasury ratio.
+     * @param _protocolTreasuryRatio Ratio for the protocol treasury.
+     */
     function setProtocolTreasuryRatio(
         uint32 _protocolTreasuryRatio
     ) public override onlyOperatorOrAdmin {
@@ -164,7 +228,12 @@ contract Config is IConfig, Base {
         configMap[UINT32_PROTOCOL_TREASURY_RATIO] = _protocolTreasuryRatio;
     }
 
-    // Check role
+    /**
+     * @dev Checks if an account has a specific role.
+     * @param role Role identifier.
+     * @param account Address to check.
+     * @return True if the account has the role, false otherwise.
+     */
     function hasRole(
         bytes32 role,
         address account
@@ -173,10 +242,9 @@ contract Config is IConfig, Base {
     }
 
     /**
-     * @dev Returns the admin role that controls `role`. See {grantRole} and
-     * {revokeRole}.
-     *
-     * To change a role's admin, use {_setRoleAdmin}.
+     * @dev Returns the admin role that controls `role`.
+     * @param role Role identifier.
+     * @return Admin role identifier.
      */
     function getRoleAdmin(bytes32 role) public view override returns (bytes32) {
         return _roles[role].adminRole;
@@ -184,14 +252,8 @@ contract Config is IConfig, Base {
 
     /**
      * @dev Revokes `role` from `account`.
-     *
-     * If `account` had been granted `role`, emits a {RoleRevoked} event.
-     *
-     * Requirements:
-     *
-     * - the caller must have ``role``'s admin role.
-     *
-     * May emit a {RoleRevoked} event.
+     * @param role Role identifier.
+     * @param account Address to revoke role from.
      */
     function revokeRole(
         bytes32 role,
@@ -202,36 +264,27 @@ contract Config is IConfig, Base {
 
     /**
      * @dev Revokes `role` from the calling account.
-     *
-     * Roles are often managed via {grantRole} and {revokeRole}: this function's
-     * purpose is to provide a mechanism for accounts to lose their privileges
-     * if they are compromised (such as when a trusted device is misplaced).
-     *
-     * If the calling account had been revoked `role`, emits a {RoleRevoked}
-     * event.
-     *
-     * Requirements:
-     *
-     * - the caller must be `account`.
-     *
-     * May emit a {RoleRevoked} event.
+     * @param role Role identifier.
+     * @param account Address to renounce role for.
      */
     function renounceRole(bytes32 role, address account) public override {
         require(
             account == _msgSender(),
             "AccessControl: can only renounce roles for self"
         );
-
         _revokeRole(role, account);
     }
 
-    function setRoleAdmin(
-        bytes32 role,
-        bytes32 adminRole
-    ) public override onlyOperatorOrAdmin {
+    /**
+     * @dev Sets `adminRole` as `role`'s admin role.
+     */
+    function setRoleAdmin(bytes32 role, bytes32 adminRole) public override onlyOperatorOrAdmin {
         _setRoleAdmin(role, adminRole);
     }
 
+    /**
+     * @dev Grants `role` to `account`.
+     */
     function grantRole(
         bytes32 role,
         address account
@@ -241,7 +294,6 @@ contract Config is IConfig, Base {
 
     /**
      * @dev Sets `adminRole` as ``role``'s admin role.
-     *
      * Emits a {RoleAdminChanged} event.
      */
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
@@ -252,9 +304,6 @@ contract Config is IConfig, Base {
 
     /**
      * @dev Grants `role` to `account`.
-     *
-     * Internal function without access restriction.
-     *
      * May emit a {RoleGranted} event.
      */
     function _grantRole(bytes32 role, address account) internal virtual {
@@ -266,9 +315,6 @@ contract Config is IConfig, Base {
 
     /**
      * @dev Revokes `role` from `account`.
-     *
-     * Internal function without access restriction.
-     *
      * May emit a {RoleRevoked} event.
      */
     function _revokeRole(bytes32 role, address account) internal virtual {
