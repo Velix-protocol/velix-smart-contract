@@ -51,6 +51,7 @@ abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
     function __Base_init(address _config) internal onlyInitializing {
         config = IConfig(_config);
         __ReentrancyGuard_init();
+        __Context_init();
     }
 
   /// @dev Revert with a standard message if `_msgSender()` is missing `role`.

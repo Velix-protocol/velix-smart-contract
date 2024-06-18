@@ -64,10 +64,10 @@ contract SveMetis is ERC4626Upgradeable, Base {
         }
 
         _burn(owner, shares);
+        _totalAssets -= assets;
 
         IERC20 asset = IERC20(asset());
         SafeERC20.safeTransfer(asset, receiver, assets);
-        _totalAssets -= assets;
 
         emit Withdraw(caller, receiver, owner, assets, shares);
     }
