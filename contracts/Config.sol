@@ -60,7 +60,7 @@ contract Config is IConfig, Base {
     */
     function initialize() external initializer {
         __Base_init(address(this));
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(TIMELOCK_ROLE, msg.sender);
     }
 
     /**
@@ -75,7 +75,7 @@ contract Config is IConfig, Base {
         address _bridge,
         address _protocolTreasury,
         uint32 _protocolTreasuryRatio
-    ) public onlyOperatorOrAdmin {
+    ) public onlyTimeLockOrAdmin {
         configMap[ADDRESS_METIS] = uint256(uint160(_metis));
         configMap[ADDRESS_BRIDGE] = uint256(uint160(_bridge));
         configMap[ADDRESS_PROTOCOL_TREASURY] = uint256(
@@ -90,7 +90,7 @@ contract Config is IConfig, Base {
      */
     function setL1Dealer(
         address _l1Dealer
-    ) public onlyOperatorOrAdmin {
+    ) public onlyTimeLockOrAdmin {
         configMap[ADDRESS_L1_DEALER] = uint256(uint160(_l1Dealer));
     }
 
@@ -98,7 +98,7 @@ contract Config is IConfig, Base {
      * @dev Sets the veMetis address.
      * @param _veMetis Address of the veMetis contract.
      */
-    function setVeMetis(address _veMetis) public onlyOperatorOrAdmin {
+    function setVeMetis(address _veMetis) public onlyTimeLockOrAdmin {
         configMap[ADDRESS_VEMETIS] = uint256(uint160(_veMetis));
     }
 
@@ -108,7 +108,7 @@ contract Config is IConfig, Base {
      */
     function setVeMetisMinterAddress(
         address _veMetisMinter
-    ) public onlyOperatorOrAdmin {
+    ) public onlyTimeLockOrAdmin {
         configMap[ADDRESS_VEMETIS_MINTER] = uint256(uint160(_veMetisMinter));
     }
 
@@ -118,7 +118,7 @@ contract Config is IConfig, Base {
      */
     function setSveMetis(
         address _sveMetis
-    ) public onlyOperatorOrAdmin {
+    ) public onlyTimeLockOrAdmin {
         configMap[ADDRESS_SVEMETIS] = uint256(uint160(_sveMetis));
     }
 
@@ -128,7 +128,7 @@ contract Config is IConfig, Base {
      */
     function setRewardDispatcher(
         address _rewardDispatcher
-    ) public onlyOperatorOrAdmin {
+    ) public onlyTimeLockOrAdmin {
         configMap[ADDRESS_REWARD_DISPATCHER] = uint256(
             uint160(_rewardDispatcher)
         );
@@ -204,7 +204,7 @@ contract Config is IConfig, Base {
 
     function setProtocolTreasury(
         address _protocolTreasury
-    ) external override onlyOperatorOrAdmin {
+    ) external override onlyTimeLockOrAdmin {
         require(
             _protocolTreasury != address(0),
             "Config: protocolTreasury is zero address"
@@ -220,7 +220,7 @@ contract Config is IConfig, Base {
      */
     function setProtocolTreasuryRatio(
         uint32 _protocolTreasuryRatio
-    ) public override onlyOperatorOrAdmin {
+    ) public override onlyTimeLockOrAdmin {
         require(
             _protocolTreasuryRatio <= 10000,
             "Config: protocolTreasuryRatio must be less than 10000"
@@ -258,7 +258,7 @@ contract Config is IConfig, Base {
     function revokeRole(
         bytes32 role,
         address account
-    ) public override onlyOperatorOrAdmin() {
+    ) public override onlyTimeLockOrAdmin() {
         _revokeRole(role, account);
     }
 
@@ -278,7 +278,7 @@ contract Config is IConfig, Base {
     /**
      * @dev Sets `adminRole` as `role`'s admin role.
      */
-    function setRoleAdmin(bytes32 role, bytes32 adminRole) public override onlyOperatorOrAdmin {
+    function setRoleAdmin(bytes32 role, bytes32 adminRole) public override onlyTimeLockOrAdmin {
         _setRoleAdmin(role, adminRole);
     }
 
@@ -288,7 +288,7 @@ contract Config is IConfig, Base {
     function grantRole(
         bytes32 role,
         address account
-    ) public override onlyOperatorOrAdmin {
+    ) public override onlyTimeLockOrAdmin {
         _grantRole(role, account);
     }
 
