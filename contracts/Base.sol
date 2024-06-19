@@ -8,11 +8,11 @@ import "./interface/IConfig.sol";
 
 abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
 
-    /// @notice The role for the operator
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
+    /// @notice The role for the tmelock
+    bytes32 public constant TIMELOCK_ROLE = keccak256("TIMELOCK_ROLE");
     
     /// @notice The role for the admin
-    bytes32 public constant DEFAULT_ADMIN_ROLE = keccak256("DEFAULT_ADMIN_ROLE");
+    bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");
 
     /// @notice The role for the backend
     bytes32 public constant BACKEND_ROLE = keccak256("BACKEND_ROLE");
@@ -25,11 +25,11 @@ abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
 
     address private internalCalling;
 
-    modifier onlyOperatorOrAdmin() {
+    modifier onlyTimeLockOrAdmin() {
         require(
-            config.hasRole(OPERATOR_ROLE, _msgSender()) ||
-            config.hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
-            "onlyOperatorOrAdmin: caller does not have the operator or admin role"
+            config.hasRole(TIMELOCK_ROLE, _msgSender()) ||
+            config.hasRole(ADMIN_ROLE, _msgSender()),
+            "onlyTimeLockOrAdmin: caller does not have the timelock or admin role"
         );
         _;
     }
