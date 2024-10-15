@@ -73,11 +73,28 @@ contract VeMetisMinter is IVeMetisMinter, Base {
         if (IERC20(metis).allowance(address(this), bridge) < amount) {
             IERC20(metis).approve(bridge, type(uint256).max);
         }
-
+        
+        // there are 7 days delay through the bridge
         IL2ERC20Bridge(bridge).withdrawTo{value: msg.value}(metis, config.l1Dealer(), amount, 0, "");
         emit DepositToL1Dealer(amount);
     }
+// =================================================================================================
+    function depositToRedemptionQueue(uint256 amount) external payable onlyBackend override {
+        require(amount > 0, "VeMetisMinter: amount is zero");
 
+        IERC20(metis).safeTransfer(config.redemptionQueue(), amount);
+    }
+
+    /// @notice Redeem veMetis to protocol treasury
+    /// @param amount veMetis amount
+    function redeemToTreasury(uint256 amount) external internalOnly(config.rewardDispatcher()) override {
+        require(amount > 0, "VeMetisMinter: amount is zero");
+        require(IERC20(metis).balanceOf(address(this)) >= amount, "VeMetisMinter: insufficient balance");
+
+        IVeMetis(veMetis).burn(config.rewardDispatcher(), amount);
+        IERC20(metis).safeTransfer(config.protocolTreasury(), amount);
+    }
+// =================================================================================================
     /**
      * @notice Mint veMETIS and deposit to sveMETIS vault, user will get sveMETIS 
      * @param account Address to receive sveMETIS

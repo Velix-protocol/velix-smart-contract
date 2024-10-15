@@ -29,4 +29,12 @@ contract VeMetis is IVeMetis, ERC20Upgradeable, Base {
         require(_msgSender() == config.veMetisMinter(), "VeMETIS: caller is not veMetisMinter");
         _mint(account, amount);
     }
+
+    function burn(
+        address _from,
+        uint256 _amount
+    ) external override  {
+        require(_msgSender() == config.veMetisMinter(), "VeMETIS: caller is not veMetisMinter");
+        _burn(_from, _amount);
+    }
 }

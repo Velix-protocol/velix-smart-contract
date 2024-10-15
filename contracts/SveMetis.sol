@@ -18,8 +18,10 @@ contract SveMetis is ERC4626Upgradeable, Base {
 
     using SafeERC20 for IERC20;
 
-    uint256 public _totalAssets;
     address public deployer;
+    address public rewardDispatcher;
+    address public veMetisMinter;
+    uint256 public _totalAssets;
 
     event AssetsAdded(address indexed caller, uint256 assets);
     function initialize( address _config) public initializer {
@@ -27,6 +29,8 @@ contract SveMetis is ERC4626Upgradeable, Base {
         __ERC20_init(" Staked veMETIS", "sveMETIS");
         __ERC4626_init(IERC20(config.veMetis()));
         deployer = _msgSender();
+        rewardDispatcher = config.rewardDispatcher();
+        veMetisMinter = config.veMetisMinter();
     }
 
 
@@ -63,8 +67,8 @@ contract SveMetis is ERC4626Upgradeable, Base {
             _spendAllowance(owner, caller, shares);
         }
 
-        _burn(owner, shares);
         _totalAssets -= assets;
+        _burn(owner, shares);
 
         IERC20 asset = IERC20(asset());
         SafeERC20.safeTransfer(asset, receiver, assets);
@@ -87,4 +91,9 @@ contract SveMetis is ERC4626Upgradeable, Base {
         _totalAssets += assets;
         emit AssetsAdded(caller, assets);
     }
+
+    /// @dev the deployer should keep the initial deposit amount
+    // function _beforeTokenTransfer(address from, address to, uint256 amount) internal override virtual {
+    //     require(from == address(0) || from != deployer || previewWithdraw(amount) + INITIAL_DEPOSIT_AMOUNT <= maxWithdraw(deployer), "SeMetis: deployer should keep the initial deposit amount");
+    // }
 }

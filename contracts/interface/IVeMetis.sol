@@ -5,4 +5,5 @@ import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 
 interface IVeMetis is IERC20 {
     function mint(address user, uint256 amount) external;
+    function burn(address user, uint256 amount) external;
 }
