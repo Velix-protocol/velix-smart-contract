@@ -5,9 +5,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./Base.sol";
+import "./interface/IVeMetis.sol";
 
 /// @title RedemptionQueue
-/// @notice RedemptionQueue is the contract that manages the redemption queue for eMetis
+/// @notice RedemptionQueue is the contract that manages the redemption queue for veMetis
 contract RedemptionQueue is ERC721Upgradeable, Base {
     using SafeERC20 for IERC20;
     using SafeCast for *;
@@ -43,20 +44,18 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
     /// @notice Information about a user's redemption ticket NFT
     mapping(uint256 nftId => RedemptionQueueItem) public nftInformation;
 
-    IERC20 public EMETIS;
+    IERC20 public veMetis;
     IERC20 public METIS;
     
     /// @notice lpFactor = lpPrice * reduceMaturityStakeSecs / MetisPrice
     mapping(address => uint256) public lpFactors;
 
     function initialize(address _config) initializer public {
-        address[] memory _holdTokens = new address[](2);
-        _holdTokens[0] = IConfig(_config).metis();
-        _holdTokens[1] = IConfig(_config).eMetis();
-        __Base_init(_config, _holdTokens);
-        __ERC721_init("eMetisRedemptionTicket", "eMetis Redemption Queue Ticket");
+        // __Base_init(_config, _holdTokens);
+        __Base_init(_config);
+        __ERC721_init("veMetisRedemptionTicket", "veMetis Redemption Queue Ticket");
         METIS = IERC20(config.metis());
-        EMETIS = IERC20(config.eMetis());
+        veMetis = IERC20(config.veMetis());
     }
 
     // =============================================================================================
@@ -69,7 +68,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
     event CollectRedemptionFees(address recipient, uint128 collectAmount);
 
     /// @notice Collect redemption feesTIMELOCK_ROLE
-    /// @param _collectAmount Amount of eMetis to collect
+    /// @param _collectAmount Amount of veMetis to collect
     function collectRedemptionFees(uint128 _collectAmount) external onlyTimeLockOrAdmin {
         require(_collectAmount > 0, "RedemptionQueue: amount is zero");
 
@@ -83,8 +82,8 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
 
         address feeRecipient = config.protocolTreasury();
 
-        // Interactions: Transfer eMetis fees to the recipient
-        EMETIS.safeTransfer({ to: feeRecipient, value: _collectAmount });
+        // Interactions: Transfer veMetis fees to the recipient
+        veMetis.safeTransfer({ to: feeRecipient, value: _collectAmount });
 
         emit CollectRedemptionFees({ recipient: feeRecipient, collectAmount: _collectAmount });
     }
@@ -99,7 +98,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
     // Queue Functions
     // =============================================================================================
 
-    /// @notice Estimate the amount of LP token needed to reduce maturity specific amount of eMetis and reduce time
+    /// @notice Estimate the amount of LP token needed to reduce maturity specific amount of veMetis and reduce time
     /// @param lpToken lp token address
     /// @param reduceTime reduce time
     /// @param redeemAmount redeem amount
@@ -126,9 +125,9 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
 
     /// @notice When someone enters the redemption queue
     /// @param nftId The ID of the NFT
-    /// @param sender The address of the msg.sender, who is redeeming eMetis
+    /// @param sender The address of the msg.sender, who is redeeming veMetis
     /// @param recipient The recipient of the NFT
-    /// @param amountEMetisRedeemed The amount of eMetis redeemed
+    /// @param amountEMetisRedeemed The amount of veMetis redeemed
     /// @param maturityTimestamp The date of maturity, upon which redemption is allowed
     /// @param redemptionFeeAmount The redemption fee
     /// @param cancelRedemptionFee The fee to cancel the redemption
@@ -142,12 +141,12 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         uint256 cancelRedemptionFee 
     );
 
-    /// @notice Enter the queue for redeeming eMetis 1-to-1. Must approve first. Internal only so payor can be set
-    /// @notice Will generate a eMetisRedemptionTicket NFT that can be redeemed for the actual Metis later.
+    /// @notice Enter the queue for redeeming veMetis 1-to-1. Must approve first. Internal only so payor can be set
+    /// @notice Will generate a veMetisRedemptionTicket NFT that can be redeemed for the actual Metis later.
     /// @param _recipient Recipient of the NFT. Must be ERC721 compatible if a contract
-    /// @param _amountToRedeem Amount of eMetis to redeem
-    /// @param _nftId The ID of the eMetisRedemptionTicket NFT
-    /// @dev Must call approve/permit on eMetis contract prior to this call
+    /// @param _amountToRedeem Amount of veMetis to redeem
+    /// @param _nftId The ID of the veMetisRedemptionTicket NFT
+    /// @dev Must call approve/permit on veMetis contract prior to this call
     function _enterRedemptionQueueCore(address _recipient, uint120 _amountToRedeem) internal returns (uint256 _nftId) {
         // Get queue information
         RedemptionQueueAccounting memory _redemptionQueueAccounting = redemptionQueueAccounting;
@@ -202,12 +201,12 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         redemptionQueueAccounting = _redemptionQueueAccounting;
     }
 
-    /// @notice Enter the queue for redeeming eMetis 1-to-1. Must approve or permit first.
-    /// @notice Will generate a eMetisRedemptionTicket NFT that can be redeemed for the actual Metis later.
+    /// @notice Enter the queue for redeeming veMetis 1-to-1. Must approve or permit first.
+    /// @notice Will generate a veMetisRedemptionTicket NFT that can be redeemed for the actual Metis later.
     /// @param _recipient Recipient of the NFT. Must be ERC721 compatible if a contract
-    /// @param _amountToRedeem Amount of eMetis to redeem
-    /// @param _nftId The ID of the eMetisRedemptionTicket NFT
-    /// @dev Must call approve/permit on eMetis contract prior to this call
+    /// @param _amountToRedeem Amount of veMetis to redeem
+    /// @param _nftId The ID of the veMetisRedemptionTicket NFT
+    /// @dev Must call approve/permit on veMetis contract prior to this call
     function enterRedemptionQueue(address _recipient, uint120 _amountToRedeem) public nonReentrant returns (uint256 _nftId) {
         require(_recipient != address(0), "RedemptionQueue: zero address");
         require(_amountToRedeem > 0, "RedemptionQueue: amount is zero");
@@ -215,36 +214,36 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         // Do all of the NFT-generating and accounting logic
         _nftId = _enterRedemptionQueueCore(_recipient, _amountToRedeem);
 
-        // Interactions: Transfer eMetis in from the sender
-        EMETIS.safeTransferFrom({ from: msg.sender, to: address(this), value: _amountToRedeem });
+        // Interactions: Transfer veMetis in from the sender
+        veMetis.safeTransferFrom({ from: msg.sender, to: address(this), value: _amountToRedeem });
     }
 
-    /// @notice When someone cancel their NFT for eMetis, with the penalty
+    /// @notice When someone cancel their NFT for veMetis, with the penalty
     /// @param nftId The ID of the NFT
     /// @param sender The sender of the NFT
     /// @param recipient The recipient of the redeemed Metis
-    /// @param eMetisOut The amount of eMetis actually sent back to the user
+    /// @param veMetisOut The amount of veMetis actually sent back to the user
     /// @param cancelRedemptionFee The fee to cancel the redemption
     event CancelRedemptionTicketNft(
         uint256 indexed nftId,
         address indexed sender,
         address indexed recipient,
-        uint120 eMetisOut,
+        uint120 veMetisOut,
         uint120 cancelRedemptionFee
     );
 
-    /// @notice Cancels a eMetisRedemptionTicket. Is penalized in doing so. Used if person does not want to wait for exit anymore.
+    /// @notice Cancels a veMetisRedemptionTicket. Is penalized in doing so. Used if person does not want to wait for exit anymore.
     /// @param _nftId The ID of the NFT
     /// @param _recipient The recipient of the redeemed Metis
-    /// @return _eMetisOut The amount of eMetis actually sent back to the user
+    /// @return _veMetisOut The amount of veMetis actually sent back to the user
     function cancelRedemptionTicketNft(
         address _recipient,
         uint256 _nftId
-    ) external nonReentrant returns (uint120 _eMetisOut) {
+    ) external nonReentrant returns (uint120 _veMetisOut) {
         require(_recipient != address(0), "RedemptionQueue: zero address");
 
         // Checks: ensure proper nft ownership
-        if (!_isApprovedOrOwner({ spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
+        if (!_isAuthorized({owner:ownerOf(_nftId), spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
 
         // Get data from state for use in calculations
         RedemptionQueueAccounting memory _redemptionQueueAccounting = redemptionQueueAccounting;
@@ -266,8 +265,8 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         // Calculations: increment unclaimedFees
         _redemptionQueueAccounting.unclaimedFees += uint128(_cancelRedemptionFee);
 
-        // Calculations: Amount of eMetis back to the recipient, minus the fees
-        _eMetisOut = _amountToRedeem - _cancelRedemptionFee;
+        // Calculations: Amount of veMetis back to the recipient, minus the fees
+        _veMetisOut = _amountToRedeem - _cancelRedemptionFee;
 
         // If there is a LP lock, transfer the LP token back to the recipient
         uint256 _lpTokenAmount = _redemptionQueueItem.lpLockAmount;
@@ -289,12 +288,12 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
             sender: msg.sender,
             recipient: _recipient,
             nftId: _nftId,
-            eMetisOut: _eMetisOut,
+            veMetisOut: _veMetisOut,
             cancelRedemptionFee: _cancelRedemptionFee
         });
 
-        // Interactions: transfer eMetis
-        EMETIS.safeTransfer({ to: _recipient, value: _eMetisOut });
+        // Interactions: transfer veMetis
+        veMetis.safeTransfer({ to: _recipient, value: _veMetisOut });
     }
 
     /// @notice When someone redeems their NFT for Metis
@@ -304,12 +303,12 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
     /// @param amountOut the amount of ether sent to the recipient
     event RedeemRedemptionTicketNft(uint256 indexed nftId, address indexed sender, address indexed recipient,  uint120 amountOut);
 
-    /// @notice Redeems a eMetisRedemptionTicket NFT for Metis. (Pre-Metis send)
+    /// @notice Redeems a veMetisRedemptionTicket NFT for Metis. (Pre-Metis send)
     /// @param _nftId The ID of the NFT
     /// @return _redemptionQueueItem The RedemptionQueueItem
     function _redeemRedemptionTicketNftPre(uint256 _nftId) internal returns (RedemptionQueueItem memory _redemptionQueueItem) {
         // Checks: ensure proper nft ownership
-        if (!_isApprovedOrOwner({ spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
+        if (!_isAuthorized({owner:ownerOf(_nftId), spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
 
         // Get queue information
         _redemptionQueueItem = nftInformation[_nftId];
@@ -336,11 +335,11 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         // Effects: Mark nft as redeemed
         nftInformation[_nftId].hasBeenRedeemed = true;
 
-        // Effects: Burn eMetis to match the amount of ether sent to user 1:1
-        EMETIS.minter_burn_from(address(this), _redemptionQueueItem.amount);
+        // Effects: Burn veMetis to match the amount of ether sent to user 1:1          
+        IVeMetis(config.veMetis()).burn(address(this), _redemptionQueueItem.amount);
     }
 
-    /// @notice Redeems a eMetisRedemptionTicket NFT for Metis. Must have reached the maturity date first.
+    /// @notice Redeems a veMetisRedemptionTicket NFT for Metis. Must have reached the maturity date first.
     /// @param _nftId The ID of the NFT
     /// @param _recipient The recipient of the redeemed Metis
     function redeemRedemptionTicketNft(uint256 _nftId, address _recipient) external virtual nonReentrant {
@@ -373,7 +372,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         require(lpAmount > 0, "RedemptionQueue: amount is zero");
 
         // Checks: ensure proper nft ownership
-        if (!_isApprovedOrOwner({ spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
+        if (!_isAuthorized({owner:ownerOf(_nftId), spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
 
         RedemptionQueueItem storage _redemptionQueueItem = nftInformation[_nftId];
         uint256 maturity = _redemptionQueueItem.maturity;
@@ -407,7 +406,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
 
     function unlockLpToken(uint256 _nftId) external {
         // Checks: ensure proper nft ownership
-        if (!_isApprovedOrOwner({ spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
+        if (!_isAuthorized({owner:ownerOf(_nftId), spender: msg.sender, tokenId: _nftId })) revert Erc721CallerNotOwnerOrApproved();
 
         // Get queue information
         RedemptionQueueItem memory _redemptionQueueItem = nftInformation[_nftId];

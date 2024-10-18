@@ -3,8 +3,8 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interface/ILockingPool.sol";
-import "./interface/ILockingInfo.sol";
+import "../interface/ILockingPool.sol";
+import "../interface/ILockingInfo.sol";
 
 contract SequencerAgent is ContextUpgradeable {
     address public dealer;

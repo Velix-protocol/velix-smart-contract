@@ -8,7 +8,7 @@ import "./Base.sol";
 
 /**
  * @title VeMetis
- * @dev ERC20 token representing staked Metis (veMETIS) in the Velix protocol.
+ * @dev ERC20 token representing staked Metis (veMetis) in the Velix protocol.
  */
 contract VeMetis is IVeMetis, ERC20Upgradeable, Base {
     /**
@@ -17,24 +17,24 @@ contract VeMetis is IVeMetis, ERC20Upgradeable, Base {
      */
     function initialize(address _config) public initializer {
         __Base_init(_config);
-        __ERC20_init("Velix Metis", "veMETIS");
+        __ERC20_init("Velix Metis", "veMetis");
     }
 
     /**
-     * @notice Mint veMETIS tokens to a specified account.
+     * @notice Mint veMetis tokens to a specified account.
      * @param account Address to receive the minted tokens.
      * @param amount Amount of tokens to mint.
      */
     function mint(address account, uint256 amount) external override {
-        require(_msgSender() == config.veMetisMinter(), "VeMETIS: caller is not veMetisMinter");
+        require(_msgSender() == config.veMetisMinter(), "veMetis: caller is not veMetisMinter");
         _mint(account, amount);
     }
 
     function burn(
         address _from,
         uint256 _amount
-    ) external override  {
-        require(_msgSender() == config.veMetisMinter(), "VeMETIS: caller is not veMetisMinter");
+    )  external override {
+        require(_msgSender() == config.veMetisMinter(), "veMetis: caller is not veMetisMinter");
         _burn(_from, _amount);
     }
 }
