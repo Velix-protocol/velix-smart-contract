@@ -22,10 +22,25 @@ interface IConfig {
 
     function protocolTreasuryRatio() external view returns (uint32);
 
+    function redemptionQueue() external view returns (address);
+    
+    function redemptionFee() external view returns (uint64);
+    function queueLengthSecs() external view returns (uint64);
+    function cancelRedemptionFee() external view returns (uint64);
+    function minQueueLengthSecs() external view returns (uint64);
+    function reduceMaturityStakeSecs() external view returns (uint64);
+
     function setProtocolTreasury(address _protocolTreasury) external;
+    
 
     function setProtocolTreasuryRatio(uint32 _protocolTreasuryRatio) external;
-
+// ----------------------------------------------------------------
+    function setRedemptionFee(uint64 _redemptionFee) external;
+    function setQueueLengthSecs(uint64 _queueLengthSecs) external;
+    function setCancelRedemptionFee(uint64 _cancelRedemptionFee) external;
+    function setMinQueueLengthSecs(uint64 _minQueueLengthSecs) external;
+    function setReduceMaturityStakeSecs(uint64 _reduceMaturityStakeSecs) external;
+// ----------------------------------------------------------------
     function hasRole(
         bytes32 role,
         address account

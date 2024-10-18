@@ -1,60 +1,65 @@
-///SPDX-License-Identifier: MIT
+//SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
+
 
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "./interface/IVeMetisMinter.sol";
 import "./interface/IConfig.sol";
 import "./interface/ICrossDomainMessenger.sol";
-import "./Base.sol";
 import "./interface/ISveMetis.sol";
+import "./Base.sol";
 
-/**
- * @title RewardDispatcher
- * @dev Manages the distribution of rewards between the protocol treasury and sveMetis vault.
- */
+/// @title RewardDispatcher
+/// @notice RewardDispatcher is the contract that dispatches rewards
 contract RewardDispatcher is Initializable, Base {
     using SafeERC20 for IERC20;
 
-    address public metis;
-    address public veMetisMinter;
-    address public veMetis;
-    address public sveMetis;
-    address public bridge;
-    address public crossDomainMessenger;
+    IERC20 public veMetis;
+    ISveMetis public sveMetis;
+    uint256 public treasuryBalance;
 
-    event Dispatched(
-        uint256 amount,
-        uint256 protocolTreasuryAmount,
-        uint256 sveMetisAmount
-    );
+    /// @notice Dispatched is emitted when dispatch rewards
+    /// @param amount amount of veMetis dispatched
+    /// @param toTreasuryAmount amount of veMetis dispatched to protocol treasury
+    /// @param toVaultAmount amount of veMetis dispatched to sveMetis vault
+    event Dispatched(uint256 amount, uint256 toTreasuryAmount, uint256 toVaultAmount);
 
-    /**
-     * @dev Initializes the contract by setting the configuration addresses.
-     * @param _config Address of the configuration contract.
-     */
+    /// @notice initialize the contract
+    /// @param _config config contract address
     function initialize(address _config) public initializer {
+        address[] memory _holdTokens = new address[](1);
+        _holdTokens[0] = IConfig(_config).veMetis();
         __Base_init(_config);
-        veMetis = config.veMetis();
-        sveMetis = config.sveMetis();
+        veMetis = IERC20(config.veMetis());
+        sveMetis = ISveMetis(config.sveMetis());
     }
 
-    /**
-     * @notice Dispatch rewards
-     * @dev Distributes veMetis tokens to the protocol treasury and sveMetis vault.
-     */
-    function dispatch() external nonReentrant onlyBackend {
-        uint256 amount = IERC20(veMetis).balanceOf(address(this));
+    /// @notice Dispatch rewards
+    /// @dev dispatch holding veMetis to protocol treasury and sveMetis vault, the ratio is configured in config contract
+    // function dispatch() external whenNotPaused nonReentrant onlyBackend {
+    function dispatch() external  nonReentrant onlyBackend {
+        uint amount = veMetis.balanceOf(address(this));
         require(amount > 0, "RewardDispatcher: no reward");
 
-        uint256 toTreasuryAmount = amount * config.protocolTreasuryRatio() / 10000;
+        uint256 toTreasuryAmount = amount * config.protocolTreasuryRatio() / FEE_PRECISION;
         uint256 toVaultAmount = amount - toTreasuryAmount;
 
-        IERC20(veMetis).safeTransfer(config.protocolTreasury(), toTreasuryAmount);
-        IERC20(veMetis).approve(address(sveMetis), toVaultAmount);
+        treasuryBalance += toTreasuryAmount;
+        veMetis.approve(address(sveMetis), toVaultAmount);
         ISveMetis(sveMetis).addAssets(toVaultAmount);
 
         emit Dispatched(amount, toTreasuryAmount, toVaultAmount);
+    }
+
+    function withdrawTreasury(uint256 amount, bool redeem) external onlyBackend {
+        require(amount <= treasuryBalance, "RewardDispatcher: insufficient balance");
+        treasuryBalance -= amount;
+
+        if (redeem) {
+            IVeMetisMinter(config.veMetisMinter()).redeemToTreasury(amount);
+        } else {
+            veMetis.safeTransfer(config.protocolTreasury(), amount);
+        }
     }
 }

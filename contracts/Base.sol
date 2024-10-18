@@ -7,6 +7,8 @@ import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol
 import "./interface/IConfig.sol";
 
 abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
+    /// @notice The precision of the fee
+    uint64 public constant FEE_PRECISION = 1e6;
 
     /// @notice The role for the tmelock
     bytes32 public constant TIMELOCK_ROLE = keccak256("TIMELOCK_ROLE");

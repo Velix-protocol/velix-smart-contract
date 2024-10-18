@@ -1,107 +1,56 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.9;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./ILockingInfo.sol";
+import "./ISequencerInfo.sol";
 
-interface ILockingPool {
-     /**
-     * @dev lockFor is used to lock Metis and participate in the sequencer block node application
-     *
-     * @param signer sequencer signer address
-     * @param amount Amount of L1 metis token to lock for.
-     * @param signerPubkey sequencer signer pubkey
-     */    
-    function lockFor(
-        address signer,
-        uint256 amount,
-        bytes memory signerPubkey
-    ) external;
+interface ILockingPool is ISequencerInfo {
+    struct SequencerData {
+        uint256 amount; // sequencer current locked
+        uint256 reward; // sequencer current reward that have not cleamed
+        uint256 activationBatch; // sequencer activation batch id
+        uint256 updatedBatch; // batch id of the last updated
+        uint256 deactivationBatch; // sequencer deactivation batch id
+        uint256 deactivationTime; // sequencer deactivation timestamp
+        uint256 unlockClaimTime; // timestamp that sequencer can claim unlocked token, it's equal to deactivationTime + WITHDRAWAL_DELAY
+        uint256 nonce; // sequencer operations number, starts from 1, and used internally by the Metis consencus client
+        address owner; // the operator address, owns this sequencer node, it controls lock/relock/unlock/claim functions
+        address signer; // sequencer signer, an address to sign L2 blocks, if you want to update it, you must have the privkey of this address
+    }
 
-
-     /**
-     * @dev relock Allow sequencer to increase the amount of locked positions
-     * @param sequencerId sequencer id
-     * @param amount Amount of L1 metis token to relock for.
-     * @param lockRewards Whether to lock the current reward
-     */   
-    function relock(
-        uint256 sequencerId,
-        uint256 amount,
-        bool lockRewards
-    ) external;
-
-
-     /**
-     * @dev withdrawRewards withdraw current reward
-     *
-     * @param sequencerId sequencer id
-     */   
-    function withdrawRewards(
-        uint256 sequencerId
-    ) external;
-    
-    /**
-     * @dev unlock is used to unlock Metis and exit the sequencer node
-     *
-     * @param sequencerId sequencer id
-     */    
-    function unlock(uint256 sequencerId) external;
-
-    
-     /**
-     * @dev unlockClaim Because unlock has a waiting period, after the waiting period is over, you can claim locked tokens
-     *
-     * @param sequencerId sequencer id
-     */   
-     function unlockClaim(uint256 sequencerId) external ;
-
+    function lockFor(address _signer, uint256 _amount, bytes calldata _signerPubkey) external;
+    function lockWithRewardRecipient(address _signer, address _rewardRecipient, uint256 _amount, bytes calldata _signerPubkey) external;
+    function relock(uint256 _seqId, uint256 _amount, bool _lockReward) external;
+    function withdrawRewards(uint256 _seqId, uint32 _l2Gas) external;
+    function unlock( uint256 _seqId, uint32 _l2Gas) external payable;
+    function unlockClaim(uint256 _seqId, uint32 _l2Gas) external payable;
+    function escrow() external view returns (ILockingInfo);
+    function sequencers(uint256 seqId) external view returns (SequencerData memory);
+    function seqSigners(address signer) external view returns (uint256 seqId);
 
     /**
-     * @dev ownerOf query owner of the NFT 
-     *
-     * @param tokenId NFT token id
-     */    
-    function ownerOf(uint256 tokenId) external view returns (address);
-
-     /**
-     * @dev getSequencerId query sequencer id by signer address
-     *
-     * @param user sequencer signer address
-     */   
-    function getSequencerId(address user)  external  view returns (uint256);
+     * @dev Emitted when WITHDRAWAL_DELAY is updated.
+     * @param _cur current withdraw delay time
+     * @param _prev previours withdraw delay time
+     */
+    event WithrawDelayTimeChange(uint256 _cur, uint256 _prev);
 
     /**
-     * @dev sequencerReward query sequencer current reward
-     *
-     * @param sequencerId sequencerid
-     */   
-    function sequencerReward(uint256 sequencerId) external view returns (uint256);
+     * @dev Emitted when the proxy update threshold in 'updateBlockReward()'.
+     * @param newReward new block reward
+     * @param oldReward  old block reward
+     */
+    event RewardUpdate(uint256 newReward, uint256 oldReward);
 
     /**
-     * @dev sequencerLock return the total lock amount of sequencer
-     *
-     * @param sequencerId sequencer id
-     */    
-    function sequencerLock(uint256 sequencerId) external view returns (uint256);
-
-     /**
-     * @dev currentSequencerSetSize  get all sequencer count
-     */    
-     function currentSequencerSetSize() external view returns (uint256);
+     * @dev Emitted when mpc address update in 'UpdateMpc'
+     * @param _newMpc new min lock.
+     */
+    event UpdateMpc(address _newMpc);
 
     /**
-     * @dev currentSequencerSetTotalLock get total lock amount for all sequencers
-     */  
-    function currentSequencerSetTotalLock() external view returns (uint256);
-
-     /**
-     * @dev getL2ChainId query current l2 chain id
-     */  
-    function getL2ChainId() external view returns(uint256);
-
-    /**
-     * @dev fetchMpcAddress query mpc address by L1 block height, used by batch-submitter
-     * @param blockHeight L1 block height
-     */  
-    function fetchMpcAddress(uint256 blockHeight) external view returns(address);
+     * @dev Emitted when SignerUpdateThrottle is updated
+     * @param _n new min value
+     */
+    event SetSignerUpdateThrottle(uint256 _n);
 }
