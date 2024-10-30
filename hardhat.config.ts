@@ -15,7 +15,11 @@ if (!process.env.PRIVATE_KEY) {
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.20",
+    compilers: [
+      { version: "0.8.20" },
+      { version: "0.8.21" },
+      { version: "0.8.10" },
+    ],
     settings: {
       optimizer: {
         enabled: true,
@@ -47,6 +51,16 @@ const config: HardhatUserConfig = {
           // apiKey is not required, just set a placeholder
           apiKey: "metis",
           apiUrl: "https://andromeda-explorer.metis.io",
+        },
+      },
+    },
+    sepolia: {
+      url: process.env.SEPOLIA__RCP_URL,
+      accounts: [WALLET_PRIVATE_KEY],
+      verify: {
+        etherscan: {
+          // apiKey is not required, just set a placeholder
+          apiKey: process.env.ETHERSCAN_API_KEY,
         },
       },
     },

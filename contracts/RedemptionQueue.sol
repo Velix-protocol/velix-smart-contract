@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.9;
+pragma solidity 0.8.20;
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -69,7 +69,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
 
     /// @notice Collect redemption feesTIMELOCK_ROLE
     /// @param _collectAmount Amount of veMetis to collect
-    function collectRedemptionFees(uint128 _collectAmount) external onlyTimeLockOrAdmin {
+    function collectRedemptionFees(uint128 _collectAmount) external onlyRole(ADMIN_ROLE)  {
         require(_collectAmount > 0, "RedemptionQueue: amount is zero");
 
         uint128 _unclaimedFees = redemptionQueueAccounting.unclaimedFees;

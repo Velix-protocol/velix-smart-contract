@@ -19,8 +19,6 @@ contract SveMetis is ERC4626Upgradeable, Base {
     using SafeERC20 for IERC20;
 
     address public deployer;
-    address public rewardDispatcher;
-    address public veMetisMinter;
     uint256 public _totalAssets;
 
     event AssetsAdded(address indexed caller, uint256 assets);
@@ -29,8 +27,6 @@ contract SveMetis is ERC4626Upgradeable, Base {
         __ERC20_init(" Staked veMETIS", "sveMETIS");
         __ERC4626_init(IERC20(config.veMetis()));
         deployer = _msgSender();
-        rewardDispatcher = config.rewardDispatcher();
-        veMetisMinter = config.veMetisMinter();
     }
 
 

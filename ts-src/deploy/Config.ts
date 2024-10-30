@@ -8,7 +8,7 @@ const func: DeployFunction = async function ({
   const { deployer } = await getNamedAccounts();
 
   console.log("Deploying Config");
-  await deploy("Config", {
+  const result = await deploy("Config", {
     from: deployer,
     proxy: {
       proxyContract: "OpenZeppelinTransparentProxy",
@@ -23,13 +23,18 @@ const func: DeployFunction = async function ({
     log: true,
   });
   console.log("========Deploying Config========");
+  console.log("Contract address: ", result.address);
 };
 
 func.tags = ["Config"];
 
 export default func;
-// ========Deploying and Verifying Config========
-// deploying "DefaultProxyAdmin" deployed at 0x1771B0E0df123ABe65689bCEF15Fd6D03aCdE2a6
-// deploying "Config_Implementation" deployed at 0x1AA8D04a6Ef1208852f75bEa94aE852Bd9106185
-// deploying "Config_Proxy"  deployed at 0x241648DD30c31eb6bADDc427c2ac05E4Cf3c8908
-// ========Deploying Config========
+// Deploying Config
+// Config_Implementation(0xd37dd532ec56973693d507068107604471f3535c);
+// Config_Proxy (0xFB45f031943759FFa793aC19d0e47aE9723EbF9a), skipping.
+// DefaultProxyAdmin (0x9522454B069f510a73Ab7179C8826Fc917514DF3)
+
+//  address _metis, 0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000
+//         address _bridge,0x4200000000000000000000000000000000000010
+//         address _protocolTreasury,0xf42DBA76dCCff37777B98F4d42a99EAD20b57bDe
+//         uint32 _protocolTreasuryRatio 100000 

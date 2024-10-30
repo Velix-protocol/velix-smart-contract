@@ -4,6 +4,8 @@ pragma solidity 0.8.20;
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 import "./interface/IVeMetis.sol";
 import "./interface/IVeMetisMinter.sol";
 import "./interface/ISveMetis.sol";
@@ -16,7 +18,7 @@ import "./Base.sol";
  * @title VeMetisMinter
  * @dev Manages the minting and distribution of veMETIS tokens within the Velix protocol.
  */
-contract VeMetisMinter is IVeMetisMinter, Base {
+contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
     using SafeERC20 for IERC20;
 
     address public veMetis;
@@ -41,7 +43,7 @@ contract VeMetisMinter is IVeMetisMinter, Base {
         crossDomainMessenger = ICrossDomainEnabled(bridge).messenger();
 
         // Initial deposit to prevent inflation attacks
-        _mintAndDeposit(_msgSender(), INITIAL_DEPOSIT_AMOUNT);
+        // _mintAndDeposit(_msgSender(), INITIAL_DEPOSIT_AMOUNT);
     }
 
     /**
@@ -103,7 +105,7 @@ contract VeMetisMinter is IVeMetisMinter, Base {
     function _mintAndDeposit(address account, uint256 amount) internal {
         require(amount > 0, "VeMetisMinter: amount is zero");
         mint(account, amount);
-        IERC20(veMetis).approve(sveMetis, amount);
+        ERC20Upgradeable(veMetis).approve(sveMetis, amount);
         ISveMetis(sveMetis).depositFromVeMetisMinter(amount, account);
     }
 }
