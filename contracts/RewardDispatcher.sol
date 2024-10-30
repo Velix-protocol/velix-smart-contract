@@ -16,7 +16,6 @@ contract RewardDispatcher is Initializable, Base {
     using SafeERC20 for IERC20;
 
     IERC20 public veMetis;
-    ISveMetis public sveMetis;
     uint256 public treasuryBalance;
 
     /// @notice Dispatched is emitted when dispatch rewards
@@ -28,11 +27,8 @@ contract RewardDispatcher is Initializable, Base {
     /// @notice initialize the contract
     /// @param _config config contract address
     function initialize(address _config) public initializer {
-        address[] memory _holdTokens = new address[](1);
-        _holdTokens[0] = IConfig(_config).veMetis();
         __Base_init(_config);
         veMetis = IERC20(config.veMetis());
-        sveMetis = ISveMetis(config.sveMetis());
     }
 
     /// @notice Dispatch rewards
@@ -46,8 +42,8 @@ contract RewardDispatcher is Initializable, Base {
         uint256 toVaultAmount = amount - toTreasuryAmount;
 
         treasuryBalance += toTreasuryAmount;
-        veMetis.approve(address(sveMetis), toVaultAmount);
-        ISveMetis(sveMetis).addAssets(toVaultAmount);
+        veMetis.approve(address(config.sveMetis()), toVaultAmount);
+        ISveMetis(config.sveMetis()).addAssets(toVaultAmount);
 
         emit Dispatched(amount, toTreasuryAmount, toVaultAmount);
     }

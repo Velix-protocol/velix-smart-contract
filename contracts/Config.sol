@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
 import "./interface/IConfig.sol";
 import "./Base.sol";
@@ -9,7 +10,7 @@ import "./Base.sol";
  * @title Config
  * @dev Manages configuration settings and roles for the protocol.
 */
-contract Config is IConfig, Base {
+contract Config is Initializable, IConfig, Base {
     event RoleAdminChanged(
         bytes32 indexed role,
         bytes32 indexed previousAdminRole,
@@ -61,13 +62,10 @@ contract Config is IConfig, Base {
         bool allowAll;
     }
 
-    mapping(bytes32 => RoleData) public _roles;
-
     uint256 public constant ADDRESS_VEMETIS =
         uint256(keccak256("ADDRESS_VEMETIS"));
     uint256 public constant ADDRESS_VEMETIS_MINTER =
         uint256(keccak256("ADDRESS_VEMETIS_MINTER"));
-
     uint256 public constant ADDRESS_SVEMETIS =
         uint256(keccak256("ADDRESS_SVEMETIS"));
     uint256 public constant ADDRESS_REWARD_DISPATCHER =
@@ -81,7 +79,6 @@ contract Config is IConfig, Base {
         uint256(keccak256("ADDRESS_PROTOCOL_TREASURY"));
     uint256 public constant UINT32_PROTOCOL_TREASURY_RATIO =
         uint256(keccak256("UINT32_PROTOCOL_TREASURY_RATIO"));
-        // =======updates =====
     uint256 public constant ADDRESS_REDEMPTION_QUEUE = 
         uint256(keccak256("ADDRESS_REDEMPTION_QUEUE"));
     uint256 public constant UINT64_REDEMPTION_FEE = 
@@ -96,15 +93,16 @@ contract Config is IConfig, Base {
         uint256(keccak256("UINT64_REDUCE_MATURITY_STAKE_SECS"));
 
     mapping(uint256 => uint256) public configMap;
-
+    mapping(bytes32 => RoleData) public _roles;
+    
     /**
      * @dev Initializes the contract by setting the default admin role to the deployer.
     */
     function initialize() external initializer {
         __Base_init(address(this));
-        _grantRole(TIMELOCK_ROLE, msg.sender);
+        _grantRole(ADMIN_ROLE, msg.sender);
     }
-
+    
     /**
      * @dev Sets initial values for the configuration.
      * @param _metis Address of the Metis token.
@@ -117,7 +115,7 @@ contract Config is IConfig, Base {
         address _bridge,
         address _protocolTreasury,
         uint32 _protocolTreasuryRatio
-    ) public onlyTimeLockOrAdmin {
+    ) public onlyRole(ADMIN_ROLE) {
         configMap[ADDRESS_METIS] = uint256(uint160(_metis));
         configMap[ADDRESS_BRIDGE] = uint256(uint160(_bridge));
         configMap[ADDRESS_PROTOCOL_TREASURY] = uint256(
@@ -132,7 +130,7 @@ contract Config is IConfig, Base {
      */
     function setL1Dealer(
         address _l1Dealer
-    ) public onlyTimeLockOrAdmin {
+    ) public onlyRole(ADMIN_ROLE) {
         configMap[ADDRESS_L1_DEALER] = uint256(uint160(_l1Dealer));
     }
 
@@ -140,7 +138,7 @@ contract Config is IConfig, Base {
      * @dev Sets the veMetis address.
      * @param _veMetis Address of the veMetis contract.
      */
-    function setVeMetis(address _veMetis) public onlyTimeLockOrAdmin {
+    function setVeMetis(address _veMetis) public onlyRole(ADMIN_ROLE) {
         configMap[ADDRESS_VEMETIS] = uint256(uint160(_veMetis));
     }
 
@@ -150,7 +148,7 @@ contract Config is IConfig, Base {
      */
     function setVeMetisMinterAddress(
         address _veMetisMinter
-    ) public onlyTimeLockOrAdmin {
+    ) public onlyRole(ADMIN_ROLE) {
         configMap[ADDRESS_VEMETIS_MINTER] = uint256(uint160(_veMetisMinter));
     }
 
@@ -160,7 +158,7 @@ contract Config is IConfig, Base {
      */
     function setSveMetis(
         address _sveMetis
-    ) public onlyTimeLockOrAdmin {
+    ) public onlyRole(ADMIN_ROLE) {
         configMap[ADDRESS_SVEMETIS] = uint256(uint160(_sveMetis));
     }
 
@@ -170,13 +168,13 @@ contract Config is IConfig, Base {
      */
     function setRewardDispatcher(
         address _rewardDispatcher
-    ) public onlyTimeLockOrAdmin {
+    ) public onlyRole(ADMIN_ROLE) {
         configMap[ADDRESS_REWARD_DISPATCHER] = uint256(
             uint160(_rewardDispatcher)
         );
     }
     // =========== updates  =========
-    function setRedemptionQueue(address _redemptionQueueAddress) public onlyTimeLockOrAdmin{
+    function setRedemptionQueue(address _redemptionQueueAddress) public onlyRole(ADMIN_ROLE){
         configMap[ADDRESS_REDEMPTION_QUEUE] = uint256(
             uint160(_redemptionQueueAddress)
         );
@@ -283,7 +281,7 @@ contract Config is IConfig, Base {
 
     function setProtocolTreasury(
         address _protocolTreasury
-    ) external override onlyTimeLockOrAdmin {
+    ) external override onlyRole(ADMIN_ROLE) {
         require(
             _protocolTreasury != address(0),
             "Config: protocolTreasury is zero address"
@@ -299,9 +297,9 @@ contract Config is IConfig, Base {
      */
     function setProtocolTreasuryRatio(
         uint32 _protocolTreasuryRatio
-    ) public override onlyTimeLockOrAdmin {
+    ) public override onlyRole(ADMIN_ROLE){
         require(
-            _protocolTreasuryRatio <= 10000,
+            _protocolTreasuryRatio <= 100000,
             "Config: protocolTreasuryRatio must be less than 10000"
         );
         configMap[UINT32_PROTOCOL_TREASURY_RATIO] = _protocolTreasuryRatio;
@@ -309,7 +307,7 @@ contract Config is IConfig, Base {
 
         /// @notice set redemption fee
     /// @param _redemptionFee redemption fee in precision of 1000000
-    function setRedemptionFee(uint64 _redemptionFee) public override onlyTimeLockOrAdmin {
+    function setRedemptionFee(uint64 _redemptionFee) public override onlyRole(ADMIN_ROLE) {
         require(_redemptionFee <= FEE_PRECISION, "Config: redemptionFee must be less than 1000000");
         uint64 oldValue = uint64(configMap[UINT64_REDEMPTION_FEE]);
         configMap[UINT64_REDEMPTION_FEE] = _redemptionFee;
@@ -318,7 +316,7 @@ contract Config is IConfig, Base {
 
     /// @notice set queue length in seconds
     /// @param _queueLengthSecs queue length in seconds
-    function setQueueLengthSecs(uint64 _queueLengthSecs) public override onlyTimeLockOrAdmin {
+    function setQueueLengthSecs(uint64 _queueLengthSecs) public override onlyRole(ADMIN_ROLE) {
         uint64 oldValue = uint64(configMap[UINT64_QUEUE_LENGTH_SECS]);
         configMap[UINT64_QUEUE_LENGTH_SECS] = _queueLengthSecs;
         emit QueueLengthSecsSet(oldValue, _queueLengthSecs);
@@ -326,7 +324,7 @@ contract Config is IConfig, Base {
 
     /// @notice set cancel redemption fee
     /// @param _cancelRedemptionFee cancel redemption fee in precision of 1000000
-    function setCancelRedemptionFee(uint64 _cancelRedemptionFee) public override onlyTimeLockOrAdmin {
+    function setCancelRedemptionFee(uint64 _cancelRedemptionFee) public override onlyRole(ADMIN_ROLE) {
         uint64 oldValue = uint64(configMap[UINT64_CANCEL_REDEMPTION_FEE]);
         configMap[UINT64_CANCEL_REDEMPTION_FEE] = _cancelRedemptionFee;
         emit CancelRedemptionFeeSet(oldValue, _cancelRedemptionFee);
@@ -334,7 +332,7 @@ contract Config is IConfig, Base {
 
     /// @notice set min queue length in seconds
     /// @param _minQueueLengthSecs min queue length in seconds
-    function setMinQueueLengthSecs(uint64 _minQueueLengthSecs) public override onlyTimeLockOrAdmin {
+    function setMinQueueLengthSecs(uint64 _minQueueLengthSecs) public override onlyRole(ADMIN_ROLE) {
         uint64 oldValue = uint64(configMap[UINT64_MIN_QUEUE_LENGTH_SECS]);
         configMap[UINT64_MIN_QUEUE_LENGTH_SECS] = _minQueueLengthSecs;
         emit MinQueueLengthSecs(oldValue, _minQueueLengthSecs);
@@ -342,7 +340,7 @@ contract Config is IConfig, Base {
 
     /// @notice set reduce maturity stake in seconds
     /// @param _reduceMaturityStakeSecs reduce maturity stake in seconds
-    function setReduceMaturityStakeSecs(uint64 _reduceMaturityStakeSecs) public override onlyTimeLockOrAdmin {
+    function setReduceMaturityStakeSecs(uint64 _reduceMaturityStakeSecs) public override onlyRole(ADMIN_ROLE) {
         uint64 oldValue = uint64(configMap[UINT64_REDUCE_MATURITY_STAKE_SECS]);
         configMap[UINT64_REDUCE_MATURITY_STAKE_SECS] = _reduceMaturityStakeSecs;
         emit ReduceMaturityStakeSecsSet(oldValue, _reduceMaturityStakeSecs);
@@ -378,7 +376,7 @@ contract Config is IConfig, Base {
     function revokeRole(
         bytes32 role,
         address account
-    ) public override onlyTimeLockOrAdmin() {
+    ) public override onlyRole(ADMIN_ROLE) {
         _revokeRole(role, account);
     }
 
@@ -398,7 +396,7 @@ contract Config is IConfig, Base {
     /**
      * @dev Sets `adminRole` as `role`'s admin role.
      */
-    function setRoleAdmin(bytes32 role, bytes32 adminRole) public override onlyTimeLockOrAdmin {
+    function setRoleAdmin(bytes32 role, bytes32 adminRole) public override onlyRole(ADMIN_ROLE) {
         _setRoleAdmin(role, adminRole);
     }
 
@@ -408,7 +406,7 @@ contract Config is IConfig, Base {
     function grantRole(
         bytes32 role,
         address account
-    ) public override onlyTimeLockOrAdmin {
+    ) public override onlyRole(ADMIN_ROLE) {
         _grantRole(role, account);
     }
 

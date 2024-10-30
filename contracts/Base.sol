@@ -10,6 +10,9 @@ abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
     /// @notice The precision of the fee
     uint64 public constant FEE_PRECISION = 1e6;
 
+    /// @notice The default admin role
+    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+
     /// @notice The role for the tmelock
     bytes32 public constant TIMELOCK_ROLE = keccak256("TIMELOCK_ROLE");
     
@@ -27,15 +30,14 @@ abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
 
     address private internalCalling;
 
-    modifier onlyTimeLockOrAdmin() {
-        require(
-            config.hasRole(TIMELOCK_ROLE, _msgSender()) ||
-            config.hasRole(ADMIN_ROLE, _msgSender()),
-            "onlyTimeLockOrAdmin: caller does not have the timelock or admin role"
-        );
+
+    modifier onlyRole(bytes32 role) {
+        if (!config.hasRole(role, _msgSender())) {
+          _checkRole(role);
+        }  
         _;
     }
-
+    
     modifier onlyBackend() {
         _checkRole(BACKEND_ROLE);
         _;
@@ -87,7 +89,7 @@ abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
      * reject Metis transfer
      */
     receive() external payable {
-        revert("VeMetisMinter: not support Metis transfer");
+        revert("Base: not support Metis transfer");
     }
 
     /**
