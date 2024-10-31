@@ -127,7 +127,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
     /// @param nftId The ID of the NFT
     /// @param sender The address of the msg.sender, who is redeeming veMetis
     /// @param recipient The recipient of the NFT
-    /// @param amountEMetisRedeemed The amount of veMetis redeemed
+    /// @param amountVeMetisRedeemed The amount of veMetis redeemed
     /// @param maturityTimestamp The date of maturity, upon which redemption is allowed
     /// @param redemptionFeeAmount The redemption fee
     /// @param cancelRedemptionFee The fee to cancel the redemption
@@ -135,7 +135,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         uint256 indexed nftId,
         address indexed sender,
         address indexed recipient,
-        uint256 amountEMetisRedeemed,
+        uint256 amountVeMetisRedeemed,
         uint120 redemptionFeeAmount,
         uint64 maturityTimestamp,
         uint256 cancelRedemptionFee 
@@ -188,7 +188,7 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
             nftId: _nftId,
             sender: msg.sender,
             recipient: _recipient,
-            amountEMetisRedeemed: _amountToRedeem,
+            amountVeMetisRedeemed: _amountToRedeem,
             redemptionFeeAmount: _redemptionFeeAmount,
             maturityTimestamp: _maturityTimestamp,
             cancelRedemptionFee: config.cancelRedemptionFee()
@@ -430,6 +430,10 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         if (_redemptionQueueItem.hasBeenRedeemed) {
             _burn(_nftId);
         }
+    }
+
+    function getNftId() external view returns (uint64) {
+        return nextNftId;
     }
 
     // ====================================
