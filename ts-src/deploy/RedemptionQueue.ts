@@ -32,7 +32,7 @@ export default func;
 
 // Deploying RedemptionQueue
 // reusing "DefaultProxyAdmin" at 0xDBb3388EA28b9135e05e5fC389Ce75f736249A7a
-// deploying "RedemptionQueue_Implementation" (tx: 0x7e2cecaedbfcded63e09aac44d804597719bdaaa20b0d2f880b38fbcf2f8aebd)...: deployed at 0x8209539EF5Df19F3cB8715221948baAC6a74feEC with 5851200 gas
+// deploying "RedemptionQueue_Implementation" 0x3Ff8947840A4F412296d215D211669F3FF1551d7
 // executing DefaultProxyAdmin.upgrade (tx: 0xcc655e174ff1469c8d874b8b2b6013a9eea58fafa0a803b872b0614e7086c759) ...: performed with 38688 gas
 // ========Deploying RedemptionQueue========
 // Contract address:  0x96C35AAe0730c625816bC3eb5cf28f68A309ef7b

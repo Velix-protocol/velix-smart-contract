@@ -436,6 +436,9 @@ contract RedemptionQueue is ERC721Upgradeable, Base {
         return nextNftId;
     }
 
+    function getNftInformation(uint256 _nftId) external view returns (RedemptionQueueItem memory) {
+        return nftInformation[_nftId];
+    }
     // ====================================
     // Errors
     // ====================================
