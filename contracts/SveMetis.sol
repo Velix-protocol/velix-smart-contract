@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC4626Upgradeable.sol";
@@ -14,7 +15,7 @@ import "./Base.sol";
 * It allows users to deposit veMetis tokens in exchange for sveMetis tokens,
 * and vice versa. Additionally, it distributes locking rewards to sveMetis token holders.
 */
-contract SveMetis is ERC4626Upgradeable, Base {
+contract SveMetis is Initializable, ERC4626Upgradeable, Base {
 
     using SafeERC20 for IERC20;
 
@@ -22,9 +23,10 @@ contract SveMetis is ERC4626Upgradeable, Base {
     uint256 public _totalAssets;
 
     event AssetsAdded(address indexed caller, uint256 assets);
+    
     function initialize( address _config) public initializer {
         __Base_init(_config);
-        __ERC20_init(" Staked veMETIS", "sveMETIS");
+        __ERC20_init(" Staked veMetis", "sveMetis");
         __ERC4626_init(IERC20(config.veMetis()));
         deployer = _msgSender();
     }

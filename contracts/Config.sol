@@ -27,11 +27,6 @@ contract Config is Initializable, IConfig, Base {
         address indexed sender
     );
 
-    /// @notice Emits when `redemptionFee` is set to `newValue`
-    /// @param oldValue old value of `redemptionFee`
-    /// @param newValue new value of `redemptionFee`
-    event RedemptionFeeSet(uint64 oldValue, uint64 newValue);
-
     /// @notice Emits when `queueLengthSecs` is set to `newValue`
     /// @param oldValue old value of `queueLengthSecs`
     /// @param newValue new value of `queueLengthSecs`
@@ -185,31 +180,11 @@ contract Config is Initializable, IConfig, Base {
         return address(uint160(configMap[ADDRESS_REDEMPTION_QUEUE]));
     }
 
-       /// @notice get redemption fee
-    function redemptionFee() external view override returns (uint64) {
-        return uint64(configMap[UINT64_REDEMPTION_FEE]);
-    }
 
     /// @notice get queue length in seconds 
     function queueLengthSecs() external view override returns (uint64) {
         return uint64(configMap[UINT64_QUEUE_LENGTH_SECS]);
     }
-
-    /// @notice get cancel redemption fee
-    function cancelRedemptionFee() external view override returns (uint64) {
-        return uint64(configMap[UINT64_CANCEL_REDEMPTION_FEE]);
-    }
-
-    /// @notice get min queue length in seconds
-    function minQueueLengthSecs() external view override returns (uint64) {
-        return uint64(configMap[UINT64_MIN_QUEUE_LENGTH_SECS]);
-    }
-
-    /// @notice get reduce maturity stake in seconds
-    function reduceMaturityStakeSecs() external view override returns (uint64) {
-        return uint64(configMap[UINT64_REDUCE_MATURITY_STAKE_SECS]);
-    }
-     // =========== updates  =========
 
     /**
      * @dev Returns the veMetis address.
@@ -305,14 +280,6 @@ contract Config is Initializable, IConfig, Base {
         configMap[UINT32_PROTOCOL_TREASURY_RATIO] = _protocolTreasuryRatio;
     }
 
-        /// @notice set redemption fee
-    /// @param _redemptionFee redemption fee in precision of 1000000
-    function setRedemptionFee(uint64 _redemptionFee) public override onlyRole(ADMIN_ROLE) {
-        require(_redemptionFee <= FEE_PRECISION, "Config: redemptionFee must be less than 1000000");
-        uint64 oldValue = uint64(configMap[UINT64_REDEMPTION_FEE]);
-        configMap[UINT64_REDEMPTION_FEE] = _redemptionFee;
-        emit RedemptionFeeSet(oldValue, _redemptionFee);
-    }
 
     /// @notice set queue length in seconds
     /// @param _queueLengthSecs queue length in seconds
@@ -320,30 +287,6 @@ contract Config is Initializable, IConfig, Base {
         uint64 oldValue = uint64(configMap[UINT64_QUEUE_LENGTH_SECS]);
         configMap[UINT64_QUEUE_LENGTH_SECS] = _queueLengthSecs;
         emit QueueLengthSecsSet(oldValue, _queueLengthSecs);
-    }
-
-    /// @notice set cancel redemption fee
-    /// @param _cancelRedemptionFee cancel redemption fee in precision of 1000000
-    function setCancelRedemptionFee(uint64 _cancelRedemptionFee) public override onlyRole(ADMIN_ROLE) {
-        uint64 oldValue = uint64(configMap[UINT64_CANCEL_REDEMPTION_FEE]);
-        configMap[UINT64_CANCEL_REDEMPTION_FEE] = _cancelRedemptionFee;
-        emit CancelRedemptionFeeSet(oldValue, _cancelRedemptionFee);
-    }
-
-    /// @notice set min queue length in seconds
-    /// @param _minQueueLengthSecs min queue length in seconds
-    function setMinQueueLengthSecs(uint64 _minQueueLengthSecs) public override onlyRole(ADMIN_ROLE) {
-        uint64 oldValue = uint64(configMap[UINT64_MIN_QUEUE_LENGTH_SECS]);
-        configMap[UINT64_MIN_QUEUE_LENGTH_SECS] = _minQueueLengthSecs;
-        emit MinQueueLengthSecs(oldValue, _minQueueLengthSecs);
-    }
-
-    /// @notice set reduce maturity stake in seconds
-    /// @param _reduceMaturityStakeSecs reduce maturity stake in seconds
-    function setReduceMaturityStakeSecs(uint64 _reduceMaturityStakeSecs) public override onlyRole(ADMIN_ROLE) {
-        uint64 oldValue = uint64(configMap[UINT64_REDUCE_MATURITY_STAKE_SECS]);
-        configMap[UINT64_REDUCE_MATURITY_STAKE_SECS] = _reduceMaturityStakeSecs;
-        emit ReduceMaturityStakeSecsSet(oldValue, _reduceMaturityStakeSecs);
     }
 
     /**

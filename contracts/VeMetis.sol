@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity 0.8.20;
 
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import "./interface/IVeMetis.sol";
 import "./interface/IConfig.sol";
@@ -10,7 +11,7 @@ import "./Base.sol";
  * @title VeMetis
  * @dev ERC20 token representing staked Metis (veMetis) in the Velix protocol.
  */
-contract VeMetis is IVeMetis, ERC20Upgradeable, Base {
+contract VeMetis is Initializable, IVeMetis, ERC20Upgradeable, Base {
     /**
      * @dev Initializes the contract with the configuration address and sets token details.
      * @param _config Address of the configuration contract.
@@ -34,7 +35,8 @@ contract VeMetis is IVeMetis, ERC20Upgradeable, Base {
         address _from,
         uint256 _amount
     )  external override {
-        require(_msgSender() == config.veMetisMinter(), "veMetis: caller is not veMetisMinter");
+        require(_msgSender() == config.redemptionQueue(), "veMetis: caller is not redemptionQueue");
         _burn(_from, _amount);
     }
+
 }

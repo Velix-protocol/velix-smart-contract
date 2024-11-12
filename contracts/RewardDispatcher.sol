@@ -14,8 +14,6 @@ import "./Base.sol";
 /// @notice RewardDispatcher is the contract that dispatches rewards
 contract RewardDispatcher is Initializable, Base {
     using SafeERC20 for IERC20;
-
-    IERC20 public veMetis;
     uint256 public treasuryBalance;
 
     /// @notice Dispatched is emitted when dispatch rewards
@@ -28,21 +26,20 @@ contract RewardDispatcher is Initializable, Base {
     /// @param _config config contract address
     function initialize(address _config) public initializer {
         __Base_init(_config);
-        veMetis = IERC20(config.veMetis());
     }
 
     /// @notice Dispatch rewards
     /// @dev dispatch holding veMetis to protocol treasury and sveMetis vault, the ratio is configured in config contract
     // function dispatch() external whenNotPaused nonReentrant onlyBackend {
     function dispatch() external  nonReentrant onlyBackend {
-        uint amount = veMetis.balanceOf(address(this));
+        uint amount = IERC20(config.veMetis()).balanceOf(address(this));
         require(amount > 0, "RewardDispatcher: no reward");
 
         uint256 toTreasuryAmount = amount * config.protocolTreasuryRatio() / FEE_PRECISION;
         uint256 toVaultAmount = amount - toTreasuryAmount;
 
         treasuryBalance += toTreasuryAmount;
-        veMetis.approve(address(config.sveMetis()), toVaultAmount);
+        IERC20(config.veMetis()).approve(address(config.sveMetis()), toVaultAmount);
         ISveMetis(config.sveMetis()).addAssets(toVaultAmount);
 
         emit Dispatched(amount, toTreasuryAmount, toVaultAmount);
@@ -55,7 +52,7 @@ contract RewardDispatcher is Initializable, Base {
         if (redeem) {
             IVeMetisMinter(config.veMetisMinter()).redeemToTreasury(amount);
         } else {
-            veMetis.safeTransfer(config.protocolTreasury(), amount);
+            IERC20(config.veMetis()).safeTransfer(config.protocolTreasury(), amount);
         }
     }
 }

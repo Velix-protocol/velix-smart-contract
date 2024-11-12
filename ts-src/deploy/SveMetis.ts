@@ -15,7 +15,7 @@ const func: DeployFunction = async function ({
       execute: {
         init: {
           methodName: "initialize",
-          args: ["0xFB45f031943759FFa793aC19d0e47aE9723EbF9a"],
+          args: ["0x4F84E5882E6ef2bA953f1A2C6594855EB38F4c91"],
         },
       },
     },
@@ -29,10 +29,9 @@ const func: DeployFunction = async function ({
 func.tags = ["SveMetis"];
 
 export default func;
-
 // Deploying SveMetis
-// reusing "DefaultProxyAdmin" at 0x8fb227396C472A28cb5B614eeF8d4eE638b87734
-// deploying "SveMetis_Implementation" (tx: 0xfd897d67abdcf5a73859761dcab1e92a454317ee30b1255189738ccb2fb20176)...: deployed at 0x9d2b1F141Ede680F0b45559808aC66BBEECe9265 with 3028403 gas
-// executing DefaultProxyAdmin.upgrade (tx: 0xb95539d4b7c0cc8b556f332f0e3e89bb3b502877d41c3b1a5ad7b6d38e144cc5) ...: performed with 38676 gas
+// reusing "DefaultProxyAdmin" at 0x06E779a4332016a3b10C6C7331d74c422d2B2640
+// deploying "SveMetis_Implementation" (tx: 0xc45faf7137ff40e58f485fa4e640b428e9f6f87dc1f34eb36f05744af593c3b3)...: deployed at 0x1cc2082e0022497E6Aa1386633EC9A5d90D3d7E4 with 3028403 gas
+// deploying "SveMetis_Proxy" (tx: 0x7cb0657ca702b8c348a79c44789036932a40268e5bfa482a869d0a63a7a98f1c)...: deployed at 0xc0bCCbeB4091B525C50Bd75d10C7eB2161affA6a with 909113 gas
 // ========Deploying SveMetis========
-// Contract address:  0x8D59009756e588ca10495f9B45a4dABE2Bede29E
+// Contract address:  0xc0bCCbeB4091B525C50Bd75d10C7eB2161affA6a

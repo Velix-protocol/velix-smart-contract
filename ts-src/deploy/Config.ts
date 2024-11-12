@@ -30,9 +30,12 @@ func.tags = ["Config"];
 
 export default func;
 // Deploying Config
-// Config_Implementation(0xd37dd532ec56973693d507068107604471f3535c);
-// Config_Proxy (0xFB45f031943759FFa793aC19d0e47aE9723EbF9a), skipping.
-// DefaultProxyAdmin (0x9522454B069f510a73Ab7179C8826Fc917514DF3)
+// reusing "DefaultProxyAdmin" at 0x06E779a4332016a3b10C6C7331d74c422d2B2640
+// deploying "Config_Implementation" (tx: 0x17902bca331963be2c095d4fd7c5dc53805e3ce3c81c142f906c39901beef03d)...: 
+// deployed at 0x6E490944D482D1C3582174be32352080A8Ff7Cb7 with 3092036 gas
+// executing DefaultProxyAdmin.upgrade (tx: 0xae7c1b003418e3fe6a7c1f7f37a75dd05b50f8003911e09552abdc87d0c4f55c) ...: performed with 38688 gas
+// ========Deploying Config========
+// Contract address:  0x4F84E5882E6ef2bA953f1A2C6594855EB38F4c91
 
 //  address _metis, 0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000
 //         address _bridge,0x4200000000000000000000000000000000000010

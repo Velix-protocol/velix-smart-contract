@@ -21,8 +21,6 @@ import "./Base.sol";
 contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
     using SafeERC20 for IERC20;
 
-    address public veMetis;
-    address public sveMetis;
     address public metis;
     address public bridge;
     address public crossDomainMessenger;
@@ -36,8 +34,6 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
      */
     function initialize(address _config) public initializer {
         __Base_init(_config);
-        veMetis = config.veMetis();
-        sveMetis = config.sveMetis();
         metis = config.metis();
         bridge = config.bridge();
         crossDomainMessenger = ICrossDomainEnabled(bridge).messenger();
@@ -53,7 +49,7 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
      */
     function mint(address account, uint256 amount) public nonReentrant override {
         IERC20(metis).safeTransferFrom(_msgSender(), address(this), amount);
-        IVeMetis(veMetis).mint(account, amount);
+        IVeMetis(config.veMetis()).mint(account, amount);
         emit Minted(_msgSender(), amount);
     }
 
@@ -64,7 +60,7 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
     function mintFromL1(uint256 amount) external nonReentrant override {
         require(_msgSender() == crossDomainMessenger, "VeMetisMinter: caller is not the crossDomainMessenger");
         require(ICrossDomainMessenger(crossDomainMessenger).xDomainMessageSender() == config.l1Dealer(), "VeMetisMinter: caller is not the l1Dealer");
-        IVeMetis(veMetis).mint(config.rewardDispatcher(), amount);
+        IVeMetis(config.veMetis()).mint(config.rewardDispatcher(), amount);
     }
 
     /**
@@ -93,7 +89,7 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
         require(amount > 0, "VeMetisMinter: amount is zero");
         require(IERC20(metis).balanceOf(address(this)) >= amount, "VeMetisMinter: insufficient balance");
 
-        IVeMetis(veMetis).burn(config.rewardDispatcher(), amount);
+        IVeMetis(config.veMetis()).burn(config.rewardDispatcher(), amount);
         IERC20(metis).safeTransfer(config.protocolTreasury(), amount);
     }
 
@@ -105,7 +101,11 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
     function _mintAndDeposit(address account, uint256 amount) internal {
         require(amount > 0, "VeMetisMinter: amount is zero");
         mint(account, amount);
-        ERC20Upgradeable(veMetis).approve(sveMetis, amount);
-        ISveMetis(sveMetis).depositFromVeMetisMinter(amount, account);
+        ERC20Upgradeable(config.veMetis()).approve(config.sveMetis(), amount);
+        ISveMetis(config.sveMetis()).depositFromVeMetisMinter(amount, account);
+    }
+
+    function getVeMetisMinterAddress() public view returns (address) {
+        return address(this);
     }
 }
