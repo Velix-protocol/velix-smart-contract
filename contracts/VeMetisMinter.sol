@@ -27,7 +27,6 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
 
     event DepositToL1Dealer(uint256 amount);
     event Minted(address indexed account, uint256 amount);
-
     /**
      * @dev Initializes the contract with configuration addresses and sets initial deposit.
      * @param _config Address of the configuration contract.
@@ -37,9 +36,6 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
         metis = config.metis();
         bridge = config.bridge();
         crossDomainMessenger = ICrossDomainEnabled(bridge).messenger();
-
-        // Initial deposit to prevent inflation attacks
-        // _mintAndDeposit(_msgSender(), INITIAL_DEPOSIT_AMOUNT);
     }
 
     /**
@@ -77,12 +73,6 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
         emit DepositToL1Dealer(amount);
     }
 
-    function depositToRedemptionQueue(uint256 amount) external payable onlyBackend override {
-        require(amount > 0, "VeMetisMinter: amount is zero");
-
-        IERC20(metis).safeTransfer(config.redemptionQueue(), amount);
-    }
-
     /// @notice Redeem veMetis to protocol treasury
     /// @param amount veMetis amount
     function redeemToTreasury(uint256 amount) external internalOnly(config.rewardDispatcher()) override {
@@ -93,19 +83,4 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
         IERC20(metis).safeTransfer(config.protocolTreasury(), amount);
     }
 
-    /**
-     * @notice Mint veMETIS and deposit to sveMETIS vault, user will get sveMETIS 
-     * @param account Address to receive sveMETIS
-     * @param amount Amount of veMETIS to mint and deposit
-     */
-    function _mintAndDeposit(address account, uint256 amount) internal {
-        require(amount > 0, "VeMetisMinter: amount is zero");
-        mint(account, amount);
-        ERC20Upgradeable(config.veMetis()).approve(config.sveMetis(), amount);
-        ISveMetis(config.sveMetis()).depositFromVeMetisMinter(amount, account);
-    }
-
-    function getVeMetisMinterAddress() public view returns (address) {
-        return address(this);
-    }
 }
