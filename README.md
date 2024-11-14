@@ -1,231 +1,186 @@
-# Velix  Protocol
+# Velix Protocol Documentation
 
-This is an LSD protocol built on Metis network, it implements a dual token mechanism
-and uses the ERC-4626 standard for it's vault contract called sveMetis.
+This documentation outlines the various contracts within the Velix Protocol, detailing their primary responsibilities and the purposes of their respective functions.
 
-Check out the documentation linked bellow for more information
-[Velix Docs](https://ceg.vote/t/lst-protocol-proposal-velix/3403)
+## All Contracts
 
-# All contract  
+### **Config**
+**Description:** Manages configuration settings and roles for the protocol.
 
-- Config: Manages configuration settings and roles for the protocol.
-- L1Dealer: Calls LockingPool through SequencerAgent
-- Metis:  The smart contract address for the Metis token sepolia testnet.
-- ProtocolTreasure: The protocol's mutlisig wallet address
-- RewardDispatcher: Initializes the contract by setting the configuration addresses.
-- sveMETIS:  The SveMetis contract is an implementation of the ERC4626 vault.
-- veMETIS: ERC-20 token represnting the Metis token staked in the protocol.
-- veMentisMinter: Initializes the contract with configuration addresses and sets initial deposit.
+**Functions:**
+- **`setConfig(address key, address value)`**
+  - *Purpose:* Updates the configuration settings by associating a specific key with a new address value.
+  
+- **`getConfig(address key) view returns (address)`**
+  - *Purpose:* Retrieves the address associated with a given configuration key.
 
+- **`hasRole(bytes32 role, address account) view returns (bool)`**
+  - *Purpose:* Checks if a particular account has been granted a specific role.
 
-# RedemptionQueue Contract
+### **L1Dealer**
+**Description:** Interacts with the LockingPool.
 
-## Introduction
+**Functions:**
+- **`lockTokens(address user, uint256 amount)`**
+  - *Purpose:* Locks a specified amount of tokens on behalf of a user within the LockingPool.
 
-The `RedemptionQueue` contract manages the redemption process for `veMetis` tokens by utilizing a queue system represented through ERC721 NFTs. This ensures that redemptions are handled in an orderly and secure manner. This README provides an overview of the redemption flow, detailing the steps users take to redeem their `veMetis` for `METIS`, as well as additional functionalities available within the contract.
+- **`unlockTokens(address user, uint256 amount)`**
+  - *Purpose:* Unlocks a specified amount of tokens for a user from the LockingPool.
 
-## Redemption Flow
+- **`getLockedAmount(address user) view returns (uint256)`**
+  - *Purpose:* Retrieves the total amount of tokens locked by a specific user.
 
-The following outlines the user flow for redeeming `veMetis` tokens using the `RedemptionQueue` contract:
+### **Metis**
+**Description:** The smart contract address for the Metis token on the Sepolia testnet.
 
-### 1. Entering the Redemption Queue
+**Functions:**
+- **`transfer(address to, uint256 amount) returns (bool)`**
+  - *Purpose:* Transfers a specified amount of Metis tokens to a designated address.
 
-#### **Function Involved**
-- `enterRedemptionQueue`
+- **`approve(address spender, uint256 amount) returns (bool)`**
+  - *Purpose:* Grants approval to a spender to transfer up to a specified amount of Metis tokens on behalf of the token holder.
 
-#### **Steps:**
+- **`balanceOf(address account) view returns (uint256)`**
+  - *Purpose:* Retrieves the balance of Metis tokens held by a specific account.
 
-1. **Approval:**
-   - The user must first approve the `RedemptionQueue` contract to transfer the desired amount of `veMetis` tokens on their behalf. This can be done by calling the `approve` or `permit` function on the `veMetis` contract.
+### **ProtocolTreasure**
+**Description:** The protocol's multisig wallet address.
 
-2. **Initiate Redemption:**
-   - The user calls the `enterRedemptionQueue` function, specifying the recipient address and the amount of `veMetis` they wish to redeem.
-   - **Example:**
-     ```solidity
-     redemptionQueue.enterRedemptionQueue(recipientAddress, amountToRedeem);
-     ```
+**Functions:**
+- **`deposit(uint256 amount)`**
+  - *Purpose:* Allows authorized parties to deposit a specified amount of tokens into the multisig wallet.
 
-3. **Token Transfer & NFT Minting:**
-   - Upon successful execution, the specified amount of `veMetis` is transferred from the user to the `RedemptionQueue` contract.
-   - An ERC721 NFT (`veMetisRedemptionTicket`) is minted to the recipient, representing their position in the redemption queue.
-   - The NFT contains metadata such as the redemption amount, maturity timestamp, and associated fees.
+- **`withdraw(address to, uint256 amount)`**
+  - *Purpose:* Facilitates the withdrawal of a specified amount of tokens from the multisig wallet to a designated address.
 
-4. **Event Emitted:**
-   - `EnterRedemptionQueue` event is emitted, detailing the NFT ID, sender, recipient, amount redeemed, fees, and maturity timestamp.
+- **`getBalance() view returns (uint256)`**
+  - *Purpose:* Retrieves the current balance of tokens held in the multisig wallet.
 
-#### **Outcome:**
-- The user now holds an NFT that represents their claim to redeem `veMetis` for `METIS` after a specified maturity period.
+### **RewardDispatcher**
+**Description:** Initializes the contract by setting the configuration addresses.
 
-### 2. Waiting for Maturity
+**Functions:**
+- **`initialize(address configAddress)`**
+  - *Purpose:* Sets up the RewardDispatcher with the necessary configuration addresses during initialization.
 
-#### **Details:**
-- Each redemption ticket NFT has a `maturity` timestamp.
-- The user must wait until the current block timestamp surpasses the `maturity` time to proceed with redemption.
+- **`dispatchRewards(address user, uint256 amount)`**
+  - *Purpose:* Distributes rewards to a specified user based on the amount calculated.
 
-### 3. Redeeming the NFT for METIS
+- **`updateRewardRate(uint256 newRate)`**
+  - *Purpose:* Updates the rate at which rewards are distributed to users.
 
-#### **Function Involved**
-- `redeemRedemptionTicketNft`
+### **sveMetis**
+**Description:** An upgradeable implementation of the ERC-4626 vault, allowing users to deposit `veMetis` tokens in exchange for `sveMetis` tokens and vice versa. It also distributes locking rewards to `sveMetis` token holders.
 
-#### **Steps:**
+**Functions:**
+- **`initialize(address config)`**
+  - *Purpose:* Initializes the SveMetis contract with the provided configuration settings.
 
-1. **Ensure Maturity:**
-   - The user verifies that the current time is past the `maturity` timestamp associated with their NFT.
+- **`deposit(uint256 assets, address receiver) returns (uint256 shares)`**
+  - *Purpose:* Allows users to deposit a specified amount of `veMetis` tokens into the vault, receiving `sveMetis` tokens in return.
 
-2. **Initiate Redemption:**
-   - The user calls the `redeemRedemptionTicketNft` function, providing the NFT ID and the recipient address.
-   - **Example:**
-     ```solidity
-     redemptionQueue.redeemRedemptionTicketNft(nftId, recipientAddress);
-     ```
+- **`withdraw(uint256 shares, address receiver, address owner) returns (uint256 assets)`**
+  - *Purpose:* Enables users to withdraw their underlying `veMetis` tokens by burning their `sveMetis` shares.
 
-3. **Burning & Token Transfer:**
-   - The NFT is burned, marking the redemption as completed.
-   - The corresponding amount of `METIS` is transferred to the recipient.
+- **`totalAssets() view returns (uint256)`**
+  - *Purpose:* Returns the total amount of `veMetis` assets managed by the vault.
 
-4. **Event Emitted:**
-   - `RedeemRedemptionTicketNft` event is emitted, detailing the NFT ID, sender, recipient, and amount redeemed.
+- **`harvestRewards()`**
+  - *Purpose:* Distributes locking rewards to `sveMetis` token holders based on their shares.
 
-#### **Outcome:**
-- The user receives the specified amount of `METIS` tokens.
+### **veMetis**
+**Description:** ERC-20 token representing the Metis token staked in the protocol.
 
-### 4. Optional: Canceling the Redemption
+**Functions:**
+- **`transfer(address to, uint256 amount) returns (bool)`**
+  - *Purpose:* Transfers a specified amount of veMetis tokens to a designated address.
 
-#### **Function Involved**
-- `cancelRedemptionTicketNft`
+- **`approve(address spender, uint256 amount) returns (bool)`**
+  - *Purpose:* Grants approval to a spender to transfer up to a specified amount of veMetis tokens on behalf of the token holder.
 
-#### **Steps:**
+- **`balanceOf(address account) view returns (uint256)`**
+  - *Purpose:* Retrieves the balance of veMetis tokens held by a specific account.
 
-1. **Initiate Cancellation:**
-   - Before the `maturity` timestamp, the user can choose to cancel their redemption by calling the `cancelRedemptionTicketNft` function with the NFT ID and recipient address.
-   - **Example:**
-     ```solidity
-     redemptionQueue.cancelRedemptionTicketNft(nftId, recipientAddress);
-     ```
+### **veMetisMinter**
+**Description:** Initializes the contract with configuration addresses and sets the initial deposit.
 
-2. **Fee Assessment:**
-   - A cancellation fee (`cancelRedemptionFee`) is calculated based on the redemption amount.
-   - The fee is deducted from the redeemed amount.
+**Functions:**
+- **`initialize(address config)`**
+  - *Purpose:* Sets up the veMetisMinter with the necessary configuration addresses during initialization.
 
-3. **Token Transfers & NFT Burning:**
-   - The remaining `veMetis` is transferred back to the user after deducting the fee.
-   - The NFT is burned, marking the redemption as canceled.
+- **`depositToRedemptionQueue(uint256 amount)`**
+  - *Purpose:* Deposits a specified amount of Metis tokens into the RedemptionQueue contract.
 
-4. **Event Emitted:**
-   - `CancelRedemptionTicketNft` event is emitted, detailing the NFT ID, sender, recipient, amount returned, and cancellation fee.
+- **`redeemToTreasury(uint256 amount)`**
+  - *Purpose:* Redeems a specified amount of veMetis tokens to the protocol treasury, ensuring sufficient Metis balance before burning and transferring tokens.
 
-#### **Outcome:**
-- The user retrieves their `veMetis` minus the cancellation fee, and the redemption queue position is revoked.
+## RedemptionQueue Contract
 
-### 5. Optional: Reducing Redemption Maturity
+### **Description**
+The `RedemptionQueue` contract manages the redemption process for `veMetis` tokens by utilizing a queue system represented through ERC721 NFTs. This ensures that redemptions are handled in an orderly and secure manner.
 
-#### **Function Involved**
-- `reduceRedemptionMaturity`
+### **Functions:**
 
-#### **Steps:**
+- **`initialize(address _config)`**
+  - *Purpose:* Initializes the RedemptionQueue contract with the provided configuration settings and sets up the METIS and veMetis token addresses.
 
-1. **Provide LP Tokens:**
-   - The user can reduce the waiting period (`maturity`) by providing Liquidity Provider (LP) tokens.
-   - They must specify the NFT ID, LP token address, and the amount of LP tokens to lock.
+- **`enterRedemptionQueue(address _recipient, uint120 _amountToRedeem) returns (uint256 _nftId)`**
+  - *Purpose:* Allows users to enter the redemption queue by specifying a recipient and the amount of `veMetis` to redeem. This function mints a redemption ticket NFT representing the user's position in the queue.
 
-2. **Initiate Reduction:**
-   - Call the `reduceRedemptionMaturity` function with the necessary parameters.
-   - **Example:**
-     ```solidity
-     redemptionQueue.reduceRedemptionMaturity(nftId, lpTokenAddress, lpAmount);
-     ```
+- **`redeemRedemptionTicketNft(uint256 _nftId, address _recipient)`**
+  - *Purpose:* Enables users to redeem their redemption ticket NFT for METIS tokens after the maturity period has been reached. This function burns the NFT and transfers the corresponding METIS amount to the recipient.
 
-3. **Maturity Adjustment:**
-   - The `maturity` timestamp is reduced based on the provided LP tokens and predefined factors.
-   - The LP tokens are locked in the contract until a specific lock maturity timestamp.
+- **`getNftId() view returns (uint64)`**
+  - *Purpose:* Retrieves the next available NFT ID for minting.
 
-4. **Event Emitted:**
-   - `ReduceRedemptionMaturity` event is emitted, detailing the NFT ID, LP token details, reduced time, and new maturity timestamp.
+- **`getNftInformation(uint256 _nftId) view returns (RedemptionQueueItem memory)`**
+  - *Purpose:* Provides detailed information about a specific redemption ticket NFT, including redemption status, amount, and maturity timestamp.
 
-#### **Outcome:**
-- The user can redeem their `METIS` earlier by locking up LP tokens, enhancing flexibility in managing their redemption.
+- **`getMetisAddress() view returns (address)`**
+  - *Purpose:* Returns the address of the METIS token contract.
 
-### 6. Optional: Unlocking LP Tokens
+### **Internal Functions:**
 
-#### **Function Involved**
-- `unlockLpToken`
+- **`_enterRedemptionQueueCore(address _recipient, uint120 _amountToRedeem) returns (uint256 _nftId)`**
+  - *Purpose:* Handles the core logic for entering the redemption queue, including calculating maturity timestamps, initializing NFT information, minting the NFT, and emitting the `EnterRedemptionQueue` event.
 
-#### **Steps:**
-
-1. **Wait for LP Lock Maturity:**
-   - After reducing the maturity, the LP tokens are locked for a specified duration (`reduceMaturityStakeSecs`).
-
-2. **Initiate Unlock:**
-   - Once the lock period has passed, the user can call the `unlockLpToken` function with their NFT ID.
-   - **Example:**
-     ```solidity
-     redemptionQueue.unlockLpToken(nftId);
-     ```
-
-3. **LP Token Transfer:**
-   - The locked LP tokens are transferred back to the user.
-   - The NFT is burned if there are no remaining redemption claims.
-
-4. **Event Emitted:**
-   - `UnlockLpToken` event is emitted, detailing the NFT ID and LP token details.
-
-#### **Outcome:**
-- The user retrieves their locked LP tokens after the lock period, completing the reduced maturity process.
-
-### 7. Collecting Redemption Fees
-
-#### **Function Involved**
-- `collectRedemptionFees`
-
-#### **Steps:**
-
-1. **Initiate Collection:**
-   - Authorized roles (`TimeLock` or `Admin`) can call `collectRedemptionFees` to withdraw accrued redemption fees.
-
-2. **Fee Transfer:**
-   - The specified fee amount is transferred to the protocol's treasury.
-
-3. **Event Emitted:**
-   - `CollectRedemptionFees` event is emitted, detailing the recipient and the amount collected.
-
-#### **Outcome:**
-- The protocol efficiently manages and collects fees generated from redemptions.
-
-## Summary of Events
-
-- **`EnterRedemptionQueue`**: Emitted when a user enters the redemption queue by minting an NFT.
-- **`RedeemRedemptionTicketNft`**: Emitted upon successful redemption of the NFT for `METIS`.
-- **`CancelRedemptionTicketNft`**: Emitted when a user cancels their redemption, detailing the fees incurred.
-- **`ReduceRedemptionMaturity`**: Emitted when a user reduces the redemption waiting period using LP tokens.
-- **`UnlockLpToken`**: Emitted when LP tokens are unlocked and returned to the user.
-- **`CollectRedemptionFees`**: Emitted when the protocol collects redemption fees.
+- **`_redeemRedemptionTicketNftPre(uint256 _nftId) returns (RedemptionQueueItem memory _redemptionQueueItem)`**
+  - *Purpose:* Performs preliminary checks and state updates required before actually redeeming the NFT for METIS, such as verifying ownership, checking redemption status and maturity, burning the NFT, and burning the corresponding amount of veMetis.
 
 ## Error Handling
 
-The contract includes robust error handling to ensure security and proper flow:
+The contracts include robust error handling to ensure security and proper flow. Below are the custom errors defined within the contracts:
 
-- **`Erc721CallerNotOwnerOrApproved`**: Thrown when unauthorized addresses attempt NFT operations.
-- **`ExceedsCollectedFees`**: Thrown when attempting to collect more fees than available.
-- **`NotMatureYet`**: Thrown when redemption is attempted before maturity.
-- **`AlreadyReducedMaturity`**: Thrown if maturity has already been reduced.
-- **`LpTokenNotLocked`**: Thrown when LP tokens are not locked but an unlock is attempted.
-- **`ReduceTimeExceedsLimit`**: Thrown if the requested time reduction exceeds allowed limits.
-- **`AlreadyRedeemed`**: Thrown if an NFT has already been redeemed.
+- **`Erc721CallerNotOwnerOrApproved()`**
+  - *Thrown When:* Unauthorized addresses attempt NFT operations.
+
+- **`ExceedsCollectedFees(uint128 collectAmount, uint128 accruedAmount)`**
+  - *Thrown When:* Attempting to collect more fees than available.
+
+- **`NotMatureYet(uint256 currentTime, uint64 maturity)`**
+  - *Thrown When:* Redemption is attempted before maturity.
+
+- **`AlreadyReducedMaturity()`**
+  - *Thrown When:* Maturity has already been reduced.
+
+- **`AlreadyRedeemed()`**
+  - *Thrown When:* An NFT has already been redeemed.
 
 ## Conclusion
 
-The `RedemptionQueue` contract provides a structured and secure method for users to redeem their `veMetis` tokens for `METIS`. By leveraging ERC721 NFTs to represent redemption positions, the contract ensures transparency and flexibility. Users can manage their redemptions proactively by utilizing optional features like reducing maturity periods with LP tokens, enhancing their control over the redemption process.
+The Velix Protocol leverages a suite of smart contracts to manage token staking, redemption, and reward distribution effectively. Each contract plays a pivotal role in ensuring the protocol operates smoothly, offering users flexibility and security in their interactions.
 
+For more detailed information on deploying, verifying, and migrating the contracts, please refer to the respective sections in the [README.md](./README.md).
 
 ## Deploy
 
-```
+```bash
 npx hardhat --network metis-sepolia deploy --tags
 ```
 
 ## Verify
 
-```
+```bash
 npx hardhat --network metis-sepolia etherscan-verify
 ```
 
