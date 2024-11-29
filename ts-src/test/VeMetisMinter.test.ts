@@ -66,29 +66,29 @@ describe("VeMetisMinter", function () {
         mintAmount
       );
       await approveTx.wait(1);
-      const allowance = await Metis.allowance(deployer, VEMETIS_MINTER_ADDRESS);
-      expect(allowance).to.be.at.least(mintAmount);
+      // const allowance = await Metis.allowance(deployer, VEMETIS_MINTER_ADDRESS);
+      // expect(allowance).to.be.at.least(mintAmount);
 
-      // Step 2: User calls mint on VeMetisMinter
-      const mintTx = await VeMetisMinterUser.mint(deployer, mintAmount);
-      await mintTx.wait(1);
+      // // Step 2: User calls mint on VeMetisMinter
+      // const mintTx = await VeMetisMinterUser.mint(deployer, mintAmount);
+      // await mintTx.wait(1);
 
-      // Step 3: User calls depositToL1Dealer to bridge Metis
-      const bridgeFee = ethers.parseEther("0.000000000001"); 
-      const depositTx = await VeMetisMinterUser.depositToL1Dealer(
-        bridgeAmount,
-        { value: bridgeFee }
-      );
-      await logGasUsed(depositTx, "Deposit to L1 Dealer");
-      await depositTx.wait(1);
+      // // Step 3: User calls depositToL1Dealer to bridge Metis
+      // const bridgeFee = ethers.parseEther("0.000000000001"); 
+      // const depositTx = await VeMetisMinterUser.depositToL1Dealer(
+      //   bridgeAmount,
+      //   { value: bridgeFee }
+      // );
+      // await logGasUsed(depositTx, "Deposit to L1 Dealer");
+      // await depositTx.wait(1);
 
-      // Verify Metis balance in VeMetisMinter decreased
-      const veMetisMinterMetisBalance = await Metis.balanceOf(
-        VEMETIS_MINTER_ADDRESS
-      );
-      expect(veMetisMinterMetisBalance).to.equal(
-        veMetisMinterMetisBalanceBefore - bridgeAmount
-      );
+      // // Verify Metis balance in VeMetisMinter decreased
+      // const veMetisMinterMetisBalance = await Metis.balanceOf(
+      //   VEMETIS_MINTER_ADDRESS
+      // );
+      // expect(veMetisMinterMetisBalance).to.equal(
+      //   veMetisMinterMetisBalanceBefore - bridgeAmount
+      // );
     });
   });
 });

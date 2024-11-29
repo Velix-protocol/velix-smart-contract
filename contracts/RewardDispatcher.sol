@@ -29,17 +29,17 @@ contract RewardDispatcher is Initializable, Base {
     }
 
     /// @notice Dispatch rewards
-    /// @dev dispatch holding veMetis to protocol treasury and sveMetis vault, the ratio is configured in config contract
+    /// @dev dispatch holding metis to protocol treasury and sveMetis vault, the ratio is configured in config contract
     // function dispatch() external whenNotPaused nonReentrant onlyBackend {
     function dispatch() external  nonReentrant onlyBackend {
-        uint amount = IERC20(config.veMetis()).balanceOf(address(this));
+        uint amount = IERC20(config.metis()).balanceOf(address(this));
         require(amount > 0, "RewardDispatcher: no reward");
 
         uint256 toTreasuryAmount = amount * config.protocolTreasuryRatio() / FEE_PRECISION;
         uint256 toVaultAmount = amount - toTreasuryAmount;
 
         treasuryBalance += toTreasuryAmount;
-        IERC20(config.veMetis()).approve(address(config.sveMetis()), toVaultAmount);
+        IERC20(config.metis()).approve(address(config.sveMetis()), toVaultAmount);
         ISveMetis(config.sveMetis()).addAssets(toVaultAmount);
 
         emit Dispatched(amount, toTreasuryAmount, toVaultAmount);
@@ -52,7 +52,7 @@ contract RewardDispatcher is Initializable, Base {
         if (redeem) {
             IVeMetisMinter(config.veMetisMinter()).redeemToTreasury(amount);
         } else {
-            IERC20(config.veMetis()).safeTransfer(config.protocolTreasury(), amount);
+            IERC20(config.metis()).safeTransfer(config.protocolTreasury(), amount);
         }
     }
 }

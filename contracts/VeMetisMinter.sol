@@ -49,14 +49,17 @@ contract VeMetisMinter is Initializable, IVeMetisMinter, Base {
         emit Minted(_msgSender(), amount);
     }
 
-    /**
-     * @notice Mint veMetis from L1 as the reward
-     * @param amount Amount of veMetis to mint
-     */
-    function mintFromL1(uint256 amount) external nonReentrant override {
-        require(_msgSender() == crossDomainMessenger, "VeMetisMinter: caller is not the crossDomainMessenger");
-        require(ICrossDomainMessenger(crossDomainMessenger).xDomainMessageSender() == config.l1Dealer(), "VeMetisMinter: caller is not the l1Dealer");
-        IVeMetis(config.veMetis()).mint(config.rewardDispatcher(), amount);
+    /// @notice Sends Metis tokens from this contract to the RewardDispatcher address
+    /// @param _amount The amount of Metis tokens to transfer
+    function sendMetisRewards(uint256 _amount) external payable nonReentrant onlyBackend{
+        require(_amount > 0, "MetisTransfer: Invalid amount");
+        require(
+            IERC20(metis).balanceOf(address(this)) >= _amount,
+            "MetisTransfer: Insufficient balance"
+        );
+        // Transfer the tokens to the reward dispatcher
+        IERC20(metis).safeTransferFrom( address(this),config.rewardDispatcher(), _amount);
+
     }
 
     /**
