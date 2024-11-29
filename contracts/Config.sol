@@ -57,12 +57,8 @@ contract Config is Initializable, IConfig, Base {
         bool allowAll;
     }
 
-    uint256 public constant ADDRESS_VEMETIS =
-        uint256(keccak256("ADDRESS_VEMETIS"));
-    uint256 public constant ADDRESS_VEMETIS_MINTER =
-        uint256(keccak256("ADDRESS_VEMETIS_MINTER"));
-    uint256 public constant ADDRESS_SVEMETIS =
-        uint256(keccak256("ADDRESS_SVEMETIS"));
+    uint256 public constant ADDRESS_VELIXVAULT =
+        uint256(keccak256("ADDRESS_VELIXVAULT"));
     uint256 public constant ADDRESS_REWARD_DISPATCHER =
         uint256(keccak256("ADDRESS_REWARD_DISPATCHER"));
     uint256 public constant ADDRESS_METIS = uint256(keccak256("ADDRESS_METIS"));
@@ -129,32 +125,15 @@ contract Config is Initializable, IConfig, Base {
         configMap[ADDRESS_L1_DEALER] = uint256(uint160(_l1Dealer));
     }
 
-    /**
-     * @dev Sets the veMetis address.
-     * @param _veMetis Address of the veMetis contract.
-     */
-    function setVeMetis(address _veMetis) public onlyRole(ADMIN_ROLE) {
-        configMap[ADDRESS_VEMETIS] = uint256(uint160(_veMetis));
-    }
 
     /**
-     * @dev Sets the veMetis minter address.
-     * @param _veMetisMinter Address of the veMetis minter contract.
+     * @dev Sets the velixVault address.
+     * @param _velixVault Address of the VelixVault contract.
      */
-    function setVeMetisMinterAddress(
-        address _veMetisMinter
+    function setVelixVault(
+        address _velixVault
     ) public onlyRole(ADMIN_ROLE) {
-        configMap[ADDRESS_VEMETIS_MINTER] = uint256(uint160(_veMetisMinter));
-    }
-
-    /**
-     * @dev Sets the sVeMetis address.
-     * @param _sveMetis Address of the sVeMetis contract.
-     */
-    function setSveMetis(
-        address _sveMetis
-    ) public onlyRole(ADMIN_ROLE) {
-        configMap[ADDRESS_SVEMETIS] = uint256(uint160(_sveMetis));
+        configMap[ADDRESS_VELIXVAULT] = uint256(uint160(_velixVault));
     }
 
     /**
@@ -186,25 +165,12 @@ contract Config is Initializable, IConfig, Base {
         return uint64(configMap[UINT64_QUEUE_LENGTH_SECS]);
     }
 
-    /**
-     * @dev Returns the veMetis address.
-     */
-    function veMetis() public view override returns (address) {
-        return address(uint160(configMap[ADDRESS_VEMETIS]));
-    }
 
     /**
-     * @dev Returns the veMetis minter address.
+     * @dev Returns the velixVault address.
      */
-    function veMetisMinter() public view override returns (address) {
-        return address(uint160(configMap[ADDRESS_VEMETIS_MINTER]));
-    }
-
-    /**
-     * @dev Returns the sVE Metis address.
-     */
-    function sveMetis() public view override returns (address) {
-        return address(uint160(configMap[ADDRESS_SVEMETIS]));
+    function velixVault() public view override returns (address) {
+        return address(uint160(configMap[ADDRESS_VELIXVAULT]));
     }
 
     /**

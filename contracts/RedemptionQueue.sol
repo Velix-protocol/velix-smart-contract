@@ -7,67 +7,29 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 import "./Base.sol";
-import "./interface/IVeMetis.sol";
+import "./interface/IVelixVault.sol";
+import "./interface/IRedemptionQueue.sol";
 
 /// @title RedemptionQueue
 /// @notice RedemptionQueue is the contract that manages the redemption queue for veMetis
-contract RedemptionQueue is Initializable, ERC721Upgradeable, Base {
+contract RedemptionQueue is Initializable, ERC721Upgradeable,IRedemptionQueue, Base {
     using SafeERC20 for IERC20;
     using SafeCast for *;
 
-    /// @notice The ```RedemptionQueueItem``` struct provides metadata information about each Nft
-    /// @param hasBeenRedeemed boolean for whether the NFT has been redeemed
-    /// @param amount How much Metis is claimable
-    /// @param maturity Unix timestamp when they can claim their Metis
-    struct RedemptionQueueItem {
-        bool hasBeenRedeemed;
-        uint64 maturity;
-        uint120 amount;
-    }
-
-    /// @param etherLiabilities How much Metis would need to be paid out if every NFT holder could claim immediately
-    /// @param unclaimedFees Earned fees that the protocol has not collected yet
-    struct RedemptionQueueAccounting {
-        uint128 etherLiabilities;
-        uint128 unclaimedFees;
-    }
-
     uint64 nextNftId;
-
-    /// @notice Accounting redemption queue
-    RedemptionQueueAccounting public redemptionQueueAccounting;
 
     /// @notice Information about a user's redemption ticket NFT
     mapping(uint256 nftId => RedemptionQueueItem) public nftInformation;
 
-    IERC20 public veMetis;
+    IVelixVault public velixVault;
     IERC20 public METIS;
-    
-    /// @notice When someone redeems their NFT for Metis
-    /// @param nftId the if of the nft redeemed
-    /// @param sender the msg.sender
-    /// @param recipient the recipient of the ether
-    /// @param amountOut the amount of ether sent to the recipient
-    event RedeemRedemptionTicketNft(uint256 indexed nftId, address indexed sender, address indexed recipient,  uint120 amountOut);
 
-    /// @notice When someone enters the redemption queue
-    /// @param nftId The ID of the NFT
-    /// @param sender The address of the msg.sender, who is redeeming veMetis
-    /// @param recipient The recipient of the NFT
-    /// @param amountVeMetisRedeemed The amount of veMetis redeemed
-    event EnterRedemptionQueue(
-        uint256 indexed nftId,
-        address indexed sender,
-        address indexed recipient,
-        uint256 amountVeMetisRedeemed,
-        uint256 maturityTimestamp
-    );
 
     function initialize(address _config) initializer public {
         __Base_init(_config);
         __ERC721_init("veMetisRedemptionTicket", "veMetis Redemption Ticket");
         METIS = IERC20(config.metis());
-        veMetis = IERC20(config.veMetis());
+        velixVault = IVelixVault(config.velixVault());
     }
 
     // =============================================================================================
@@ -84,7 +46,7 @@ contract RedemptionQueue is Initializable, ERC721Upgradeable, Base {
     /// @param _amountToRedeem Amount of veMetis to redeem
     /// @param _nftId The ID of the veMetisRedemptionTicket NFT
     /// @dev Must call approve/permit on veMetis contract prior to this call
-    function _enterRedemptionQueueCore(address _recipient, uint120 _amountToRedeem) internal returns (uint256 _nftId) {
+    function _enterRedemptionQueueCore(address _recipient, uint256 _amountToRedeem) internal returns (uint256 _nftId) {
         // Calculations: maturity timestamp
         uint64 _maturityTimestamp = uint64(block.timestamp) + config.queueLengthSecs();
 
@@ -118,15 +80,13 @@ contract RedemptionQueue is Initializable, ERC721Upgradeable, Base {
     /// @param _amountToRedeem Amount of veMetis to redeem
     /// @param _nftId The ID of the veMetisRedemptionTicket NFT
     /// @dev Must call approve/permit on veMetis contract prior to this call
-    function enterRedemptionQueue(address _recipient, uint120 _amountToRedeem) public nonReentrant returns (uint256 _nftId) {
+    function enterRedemptionQueue(address _recipient, uint256 _amountToRedeem) public nonReentrant returns (uint256 _nftId) {
+        require(_msgSender() == config.velixVault(), "RedemptionQueue: caller is not VelixVault");
         require(_recipient != address(0), "RedemptionQueue: zero address");
         require(_amountToRedeem > 0, "RedemptionQueue: amount is zero");
 
         // Do all of the NFT-generating and accounting logic
         _nftId = _enterRedemptionQueueCore(_recipient, _amountToRedeem);
-
-        // Interactions: Transfer veMetis in from the sender
-        veMetis.safeTransferFrom({ from: msg.sender, to: address(this), value: _amountToRedeem });
     }
 
 
@@ -156,8 +116,6 @@ contract RedemptionQueue is Initializable, ERC721Upgradeable, Base {
         // Effects: Mark nft as redeemed
         nftInformation[_nftId].hasBeenRedeemed = true;
 
-        // Effects: Burn veMetis to match the amount of ether sent to user 1:1          
-        IVeMetis(config.veMetis()).burn(address(this), _redemptionQueueItem.amount);
     }
 
     /// @notice Redeems a veMetisRedemptionTicket NFT for Metis. Must have reached the maturity date first.
@@ -194,18 +152,10 @@ contract RedemptionQueue is Initializable, ERC721Upgradeable, Base {
     /// @notice ERC721: caller is not token owner or approved
     error Erc721CallerNotOwnerOrApproved();
 
-    /// @notice When timelock/operator tries collecting more fees than they are due
-    /// @param collectAmount How much fee the ounsender is trying to collect
-    /// @param accruedAmount How much fees are actually collectable
-    error ExceedsCollectedFees(uint128 collectAmount, uint128 accruedAmount);
-
     /// @notice NFT is not mature enough to redeem yet
     /// @param currentTime Current time.
     /// @param maturity Time of maturity
     error NotMatureYet(uint256 currentTime, uint64 maturity);
-
-    /// @notice Already reduced maturity
-    error AlreadyReducedMaturity();
     
     /// @notice already redeemed
     error AlreadyRedeemed();

@@ -30,6 +30,7 @@ abstract contract Base is ContextUpgradeable, ReentrancyGuardUpgradeable {
 
     address private internalCalling;
 
+    uint256 public _totalAssets;
 
     modifier onlyRole(bytes32 role) {
         if (!config.hasRole(role, _msgSender())) {

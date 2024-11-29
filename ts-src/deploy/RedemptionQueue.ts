@@ -15,7 +15,7 @@ const func: DeployFunction = async function ({
       execute: {
         init: {
           methodName: "initialize",
-          args: ["0x4F84E5882E6ef2bA953f1A2C6594855EB38F4c91"],
+          args: ["0xFB6E65f3d6207f326A6B88830b1E35c1F98BF25d"],
         },
       },
     },
@@ -30,4 +30,4 @@ func.tags = ["RedemptionQueue"];
 
 export default func;
 // ========Deploying RedemptionQueue========
-// Contract address:  0x6383b4CC63f2261B2bFB90Ebb2AE3587eC301218
+// Contract address:  0x5F38472BC3ad03eaadB93dC168b49A5871B0E128

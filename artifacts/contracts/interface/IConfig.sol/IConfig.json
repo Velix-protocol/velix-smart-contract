@@ -270,33 +270,7 @@
     },
     {
       "inputs": [],
-      "name": "sveMetis",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "veMetis",
-      "outputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "veMetisMinter",
+      "name": "velixVault",
       "outputs": [
         {
           "internalType": "address",

@@ -4,11 +4,7 @@ pragma solidity 0.8.20;
 interface IConfig {
     function initialize() external;
 
-    function veMetis() external view returns (address);
-
-    function veMetisMinter() external view returns (address);
-
-    function sveMetis() external view returns (address);
+    function velixVault() external view returns (address);
 
     function rewardDispatcher() external view returns (address);
 
