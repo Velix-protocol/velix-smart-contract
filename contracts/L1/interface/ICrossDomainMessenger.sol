@@ -8,7 +8,6 @@ interface ICrossDomainMessenger {
     /**********
      * Events *
      **********/
-
     event SentMessage(
         address indexed target,
         address sender,
